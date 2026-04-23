@@ -1,0 +1,24 @@
+@host = http://localhost:8000
+
+### Climate history — mensual, 4 años en Antigua Guatemala
+# NASA POWER community=AG. Cache Redis 7d por (lat, lon, start, end, granularity).
+# 200 -> { lat, lon, granularity, start, end, series: [ClimatePoint] }
+# 404 -> sin datos para los parámetros dados
+# 422 -> fechas inválidas / rango > 366d en daily / end < start
+# 502 -> error del proveedor upstream
+GET {{host}}/climate/history?lat=14.5586&lon=-90.7295&start=2020-01-01&end=2023-12-31&granularity=monthly
+
+### Climate history — diario, mes de enero 2024
+GET {{host}}/climate/history?lat=14.5586&lon=-90.7295&start=2024-01-01&end=2024-01-31&granularity=daily
+
+### Climate history — Pampa Húmeda, últimos 10 años mensuales
+GET {{host}}/climate/history?lat=-34.6037&lon=-58.3816&start=2014-01-01&end=2023-12-31&granularity=monthly
+
+### Error: rango > 366 días en daily (esperado 422)
+GET {{host}}/climate/history?lat=14.5586&lon=-90.7295&start=2020-01-01&end=2022-12-31&granularity=daily
+
+### Error: end < start (esperado 422)
+GET {{host}}/climate/history?lat=14.5586&lon=-90.7295&start=2024-01-31&end=2024-01-01&granularity=monthly
+
+### Error: fecha mal formada (esperado 422)
+GET {{host}}/climate/history?lat=14.5586&lon=-90.7295&start=01-01-2024&end=2024-01-31&granularity=monthly

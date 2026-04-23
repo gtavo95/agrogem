@@ -1,0 +1,14 @@
+@host = http://localhost:8000
+
+### Register user
+# Crea un usuario nuevo. Password se guarda hasheada con bcrypt.
+# 201 -> { id, phone, created_at }
+# 409 -> phone ya registrado
+# 422 -> phone o password no cumplen validación
+POST {{host}}/users/register
+Content-Type: application/json
+
+{
+  "phone": "+529991234567",
+  "password": "supersecret"
+}

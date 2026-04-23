@@ -1,0 +1,21 @@
+@host = http://localhost:8000
+
+### Soil profile — Antigua Guatemala
+# ISRIC SoilGrids. Devuelve 3 horizontes (0-5, 5-15, 15-30 cm) con pH, SOC, N, arena/limo/arcilla, CEC y textura USDA.
+# 200 -> { lat, lon, horizons: [...], dominant_texture, interpretation }
+# 404 -> sin cobertura para esas coordenadas (ej: océano, polos)
+# 422 -> lat/lon fuera de rango
+# 502 -> error del proveedor upstream
+GET {{host}}/soil?lat=14.5586&lon=-90.7295
+
+### Soil profile — Zapopan, Jalisco
+GET {{host}}/soil?lat=20.7236&lon=-103.3848
+
+### Soil profile — Pampa Húmeda, Argentina (suelo muy fértil)
+GET {{host}}/soil?lat=-34.6037&lon=-58.3816
+
+### Error: coordenadas en el océano (esperado 404)
+GET {{host}}/soil?lat=0&lon=-30
+
+### Error: lat fuera de rango (esperado 422)
+GET {{host}}/soil?lat=200&lon=0

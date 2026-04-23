@@ -5,7 +5,14 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from auth.secrets import load_secrets
-from db.mongo import close_mongo, create_mongo_client
+from providers.gcs.config import create_gcs_bucket
+from providers.gemini.config import create_gemini_client
+from providers.mongo.config import close_mongo, create_mongo_client
+from providers.redis.config import (
+    aclose as redis_aclose,
+    get_async_client as create_redis_client,
+    ping as redis_ping,
+)
 
 load_dotenv()
 
@@ -13,6 +20,9 @@ load_dotenv()
 # to GCP Secret Manager IDs as `{MODE}_{NAME}` (e.g. PROD_MONGODB_URI).
 required_secrets = [
     "MONGODB_URI",
+    "REDIS_URL",
+    "GEMINI_API_KEY",
+    "GCS_BUCKET",
 ]
 
 
@@ -29,14 +39,54 @@ async def lifespan(app: FastAPI):
             "FATAL: MONGODB_URI not found. Set it in .env or in GCP Secret Manager."
         )
 
+    redis_url = os.environ.get("REDIS_URL")
+    if not redis_url:
+        raise RuntimeError(
+            "FATAL: REDIS_URL not found. Set it in .env or in GCP Secret Manager."
+        )
+
+    gemini_api_key = os.environ.get("GEMINI_API_KEY")
+    if not gemini_api_key:
+        raise RuntimeError(
+            "FATAL: GEMINI_API_KEY not found. Set it in .env or in GCP Secret Manager."
+        )
+
+    gcs_bucket = os.environ.get("GCS_BUCKET")
+    if not gcs_bucket:
+        raise RuntimeError(
+            "FATAL: GCS_BUCKET not found. Set it in .env or in GCP Secret Manager."
+        )
+
     try:
         app.state.mongo = create_mongo_client(mongo_uri)
         print("✓ MongoDB connected")
     except Exception as e:
         raise RuntimeError(f"FATAL: MongoDB connection failed: {e}")
 
+    try:
+        app.state.redis = create_redis_client(redis_url)
+        await redis_ping(app.state.redis)
+        print("✓ Redis connected")
+    except Exception as e:
+        raise RuntimeError(f"FATAL: Redis connection failed: {e}")
+
+    try:
+        app.state.gemini = create_gemini_client(gemini_api_key)
+        print("✓ Gemini client ready")
+    except Exception as e:
+        raise RuntimeError(f"FATAL: Gemini client init failed: {e}")
+
+    try:
+        app.state.gcs_bucket = create_gcs_bucket(gcs_bucket)
+        print(f"✓ GCS bucket '{gcs_bucket}' ready")
+    except Exception as e:
+        raise RuntimeError(f"FATAL: GCS bucket init failed: {e}")
+
     yield
 
+    if app.state.redis:
+        await redis_aclose(app.state.redis)
+        print("✓ Redis closed")
     if app.state.mongo:
         close_mongo(app.state.mongo)
         print("✓ MongoDB closed")

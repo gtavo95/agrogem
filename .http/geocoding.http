@@ -1,0 +1,33 @@
+@host = http://localhost:8000
+
+### Forward geocoding — Chimaltenango, Guatemala (con filtro de país)
+# Nominatim (OpenStreetMap) via proxy con cache Redis (TTL 30 días por query + país).
+# 200 -> { lat, lon, display_name, country_code, state, municipality, type }
+# 404 -> ninguna coincidencia
+# 422 -> query vacío o country inválido
+# 502 -> error del proveedor upstream
+GET {{host}}/geocode?q=Chimaltenango&country=GT
+
+### Forward geocoding — Antigua Guatemala (sin filtro de país)
+GET {{host}}/geocode?q=Antigua Guatemala
+
+### Forward geocoding — Zapopan, Jalisco (México)
+GET {{host}}/geocode?q=Zapopan, Jalisco&country=MX
+
+### Forward geocoding — sin match (esperado 404)
+GET {{host}}/geocode?q=xyzxyzxyz123nonexistent
+
+### Forward geocoding — query vacío (esperado 422)
+GET {{host}}/geocode?q=
+
+### Reverse geocoding — Antigua Guatemala
+# 200 -> { lat, lon, display_name, country_code, state, municipality, type }
+# 404 -> sin resultado para esas coordenadas
+# 422 -> lat/lon fuera de rango
+GET {{host}}/geocode/reverse?lat=14.5586&lon=-90.7295
+
+### Reverse geocoding — Ciudad de México
+GET {{host}}/geocode/reverse?lat=19.4326&lon=-99.1332
+
+### Reverse geocoding — latitud fuera de rango (esperado 422)
+GET {{host}}/geocode/reverse?lat=200&lon=0

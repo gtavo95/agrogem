@@ -1,0 +1,25 @@
+@host = http://localhost:8000
+
+### 1) Solicitar URL firmada para subir la foto del agricultor
+# Devuelve { object_path, signed_url, content_type, expires_in_seconds }.
+# El cliente debe hacer PUT binario a signed_url con el content_type indicado.
+# La imagen queda en prefijo queries/ del bucket y se auto-borra por lifecycle.
+POST {{host}}/pest/upload-url
+
+### 2) Subir la imagen al bucket (PUT directo a GCS con la signed URL)
+# Reemplazá <signed_url> por el valor devuelto arriba.
+# PUT <signed_url>
+# Content-Type: image/jpeg
+#
+# < ./sample_pest.jpg
+
+### 3) Identificar la plaga usando el object_path subido
+# Response: top_match (si supera el ratio mínimo) + alternatives (top-K vecinos)
+#           + votes (peso total por pest_name en el top-K).
+# Pensado como tool: el agente puede razonar con votos+similitudes, no solo un ID.
+POST {{host}}/pest/identify
+Content-Type: application/json
+
+{
+  "object_path": "queries/REPLACE_WITH_PATH_FROM_STEP_1.jpg"
+}

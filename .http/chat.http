@@ -1,0 +1,33 @@
+@host = http://localhost:8000
+
+### Create chat session
+# Crea una nueva sesion de chat en Redis con TTL de 24h.
+# 201 -> { id, user_id, messages, state, created_at, updated_at }
+# 422 -> user_id invalido
+POST {{host}}/chat/sessions
+Content-Type: application/json
+
+{
+  "user_id": "6530f1e5a2c8b4d1e2f3a4b5"
+}
+
+### Add message to conversation
+# Persiste un mensaje en Mongo (upsert sobre conversation_id).
+# 201 -> Conversation completa con el mensaje anexado
+# 422 -> payload invalido
+POST {{host}}/chat/conversations/6530f1e5a2c8b4d1e2f3a4b5/messages
+Content-Type: application/json
+
+{
+  "user_id": "6530f1e5a2c8b4d1e2f3a4b5",
+  "message": {
+    "role": "user",
+    "content": "Hola, necesito ayuda con mi cultivo."
+  }
+}
+
+### List conversations
+# Devuelve todas las conversaciones, ordenadas por updated_at desc.
+# Opcional: ?user_id=... para filtrar.
+# 200 -> [Conversation]
+GET {{host}}/chat/conversations

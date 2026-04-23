@@ -1,0 +1,21 @@
+@host = http://localhost:8000
+
+### Disease risk — roya del café en Antigua Guatemala
+# Derivado: combina /weather (forecast 7d) con reglas agronómicas específicas por enfermedad.
+# Sin cache propio; reutiliza el cache de weather (15 min).
+# 200 -> { disease, lat, lon, risk_score, risk_level, factors, interpretation }
+# 422 -> disease no reconocida o lat/lon fuera de rango
+# 502 -> error del proveedor de weather upstream
+GET {{host}}/disease-risk?lat=14.5586&lon=-90.7295&disease=coffee_rust
+
+### Disease risk — tizón tardío en una zona papera alta
+GET {{host}}/disease-risk?lat=14.8350&lon=-91.5180&disease=late_blight
+
+### Disease risk — roya del maíz en el Bajío (México)
+GET {{host}}/disease-risk?lat=20.6767&lon=-101.3546&disease=corn_rust
+
+### Error: enfermedad desconocida (esperado 422)
+GET {{host}}/disease-risk?lat=14.5586&lon=-90.7295&disease=powdery_mildew
+
+### Error: lat fuera de rango (esperado 422)
+GET {{host}}/disease-risk?lat=200&lon=0&disease=coffee_rust

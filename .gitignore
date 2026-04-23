@@ -22,3 +22,5 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+agrogem-sa.json
+.env

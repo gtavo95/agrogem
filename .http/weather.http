@@ -1,0 +1,23 @@
+@host = http://localhost:8000
+
+### Get weather — Ciudad de México
+# Pronóstico de Open-Meteo (current + hourly 7d + daily 7d) con cache Redis (TTL 15min por coordenada).
+# Variables agronómicas: ET₀ (evapotranspiración), UV max, humedad relativa, precipitación.
+# 200 -> { latitude, longitude, timezone, current, hourly, daily }
+# 422 -> lat/lon faltante o fuera de rango
+# 502 -> error del proveedor upstream (Open-Meteo caído o timeout)
+GET {{host}}/weather?lat=19.4326&lon=-99.1332
+
+### Get weather — Buenos Aires
+# Segundo hit a la misma coordenada devuelve el valor cacheado en Redis (más rápido, sin llamada a Open-Meteo).
+GET {{host}}/weather?lat=-34.6037&lon=-58.3816
+
+### Get weather — Bogotá
+GET {{host}}/weather?lat=4.7110&lon=-74.0721
+
+### Error: latitud fuera de rango (422)
+# lat debe estar en [-90, 90], lon en [-180, 180].
+GET {{host}}/weather?lat=200&lon=0
+
+### Error: parámetros faltantes (422)
+GET {{host}}/weather

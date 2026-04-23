@@ -1,0 +1,18 @@
+@host = http://localhost:8000
+
+### Elevation — Antigua Guatemala (~1530 m.s.n.m)
+# Open-Meteo Elevation. Cache Redis 365 días (la altitud no cambia).
+# 200 -> { lat, lon, elevation_m }
+# 404 -> sin dato para esas coordenadas
+# 422 -> lat/lon fuera de rango
+# 502 -> error del proveedor upstream
+GET {{host}}/elevation?lat=14.5586&lon=-90.7295
+
+### Elevation — Ciudad de México (~2240 m.s.n.m)
+GET {{host}}/elevation?lat=19.4326&lon=-99.1332
+
+### Elevation — océano (esperado 0 m o cercano)
+GET {{host}}/elevation?lat=0&lon=-30
+
+### Error: lat fuera de rango (esperado 422)
+GET {{host}}/elevation?lat=200&lon=0

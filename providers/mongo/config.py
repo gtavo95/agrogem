@@ -1,28 +1,24 @@
+from typing import Any
+
+from bson import ObjectId
 from fastapi import Request
 from motor.motor_asyncio import AsyncIOMotorClient
-from bson import ObjectId
-from typing import Any
 
 
 def create_mongo_client(uri: str) -> AsyncIOMotorClient:
-    """Creates a new MongoDB connection."""
-    client = AsyncIOMotorClient(uri)
-    # Potentially add ping logic here to verify connection immediately
-    return client
+    return AsyncIOMotorClient(uri)
 
 
-def close_mongo(client: AsyncIOMotorClient):
-    """Closes the MongoDB connection."""
+def close_mongo(client: AsyncIOMotorClient) -> None:
     client.close()
 
 
-def get_mongo(request: Request):
+def get_mongo(request: Request) -> AsyncIOMotorClient:
     """Dependency to retrieve the MongoDB client from app state."""
     return request.app.state.mongo
 
 
 def mongo_to_json(doc: dict[str, Any]) -> dict[str, Any]:
-    # convierte ObjectId (y cualquier nested) a tipos JSON
     for k, v in list(doc.items()):
         if isinstance(v, ObjectId):
             doc[k] = str(v)
