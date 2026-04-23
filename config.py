@@ -20,7 +20,7 @@ load_dotenv()
 # to GCP Secret Manager IDs as `{MODE}_{NAME}` (e.g. PROD_MONGODB_URI).
 required_secrets = [
     "MONGODB_URI",
-    "REDIS_URL",
+    "REDIS_URI",
     "GEMINI_API_KEY",
     "GCS_BUCKET",
 ]
@@ -39,10 +39,10 @@ async def lifespan(app: FastAPI):
             "FATAL: MONGODB_URI not found. Set it in .env or in GCP Secret Manager."
         )
 
-    redis_url = os.environ.get("REDIS_URL")
+    redis_url = os.environ.get("REDIS_URI")
     if not redis_url:
         raise RuntimeError(
-            "FATAL: REDIS_URL not found. Set it in .env or in GCP Secret Manager."
+            "FATAL: REDIS_URI not found. Set it in .env or in GCP Secret Manager."
         )
 
     gemini_api_key = os.environ.get("GEMINI_API_KEY")

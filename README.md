@@ -101,7 +101,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# edita .env: GOOGLE_CLOUD_PROJECT, MODE (DEV|PROD), y opcionalmente MONGODB_URI, REDIS_URL
+# edita .env: GOOGLE_CLOUD_PROJECT, MODE (DEV|PROD), y opcionalmente MONGODB_URI, REDIS_URI
 ```
 
 Si usas GCP Secret Manager:
@@ -368,12 +368,12 @@ Pensado para que el agente responda preguntas como *"¿cuánto llovió en mi par
 
 ## Secretos
 
-Los nombres listados en `config.py` → `required_secrets` se buscan en GCP Secret Manager como `{MODE}_{NAME}` (p.ej. `PROD_MONGODB_URI`, `PROD_REDIS_URL`). Si la variable ya está en el entorno (vía `.env`), la búsqueda se salta.
+Los nombres listados en `config.py` → `required_secrets` se buscan en GCP Secret Manager como `{MODE}_{NAME}` (p.ej. `PROD_MONGODB_URI`, `PROD_REDIS_URI`). Si la variable ya está en el entorno (vía `.env`), la búsqueda se salta.
 
 Secretos requeridos:
 
 - `MONGODB_URI`
-- `REDIS_URL`
+- `REDIS_URI`
 - `GEMINI_API_KEY` — para `gemini-embedding-2` vía Gemini API (ai.google.dev)
 - `GCS_BUCKET` — nombre del bucket para `reference/`, `queries/`, `community/`
 
