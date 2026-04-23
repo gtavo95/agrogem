@@ -8,6 +8,7 @@ from domain.elevation.router import router as elevation_router
 from domain.gbif.router import router as gbif_router
 from domain.geocoding.router import router as geocoding_router
 from domain.pest.router import router as pest_router
+from domain.pest_risk.router import router as pest_risk_router
 from domain.session.router import router as session_router
 from domain.soil.router import router as soil_router
 from domain.user.router import router as user_router
@@ -22,6 +23,7 @@ app.include_router(gbif_router)
 app.include_router(geocoding_router)
 app.include_router(soil_router)
 app.include_router(pest_router)
+app.include_router(pest_risk_router)
 app.include_router(elevation_router)
 app.include_router(climate_router)
 app.include_router(disease_risk_router)
