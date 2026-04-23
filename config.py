@@ -29,7 +29,7 @@ required_secrets = [
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     project_id = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
-    mode = os.environ.get("MODE", "DEV")
+    mode = os.environ.get("MODE", "PROD")
 
     load_secrets(mode, project_id, required_secrets)
 
@@ -50,7 +50,6 @@ async def lifespan(app: FastAPI):
         raise RuntimeError(
             "FATAL: GEMINI_API_KEY not found. Set it in .env or in GCP Secret Manager."
         )
-
     gcs_bucket = os.environ.get("GCS_BUCKET")
     if not gcs_bucket:
         raise RuntimeError(

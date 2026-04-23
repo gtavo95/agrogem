@@ -19,7 +19,7 @@ UPLOAD_URL_TTL_SECONDS = 15 * 60
 DEFAULT_TOP_K = 5
 # Cutoff below which the top weighted class is considered "not in library".
 # Calibrate via scripts/calibrate_knn.py before relying on this.
-MIN_CONFIDENCE_RATIO = 0.5
+MIN_CONFIDENCE_RATIO = 0.827
 HIGH_CONFIDENCE_RATIO = 0.75
 
 
