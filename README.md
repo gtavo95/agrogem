@@ -4,6 +4,8 @@ API REST de **herramientas agronómicas** (clima, suelo, riesgos fitosanitarios,
 
 > Gemma se encarga del lenguaje natural y la conversación con el productor agrícola; Agrogem aporta los **datos en vivo y los cálculos agronómicos** detrás de endpoints HTTP simples y deterministas.
 
+> 🧠 **Todos los endpoints incluyen un campo `interpretation`** — un resumen en español listo para inyectar como contexto en Gemma. El frontend no tiene que armar el contexto a mano.
+
 📚 **Documentación completa** (arquitectura hexagonal, setup, deploy, referencia exhaustiva, secretos, persistencia): **[`/docs/README.md`](docs/README.md)**
 
 ---
@@ -72,11 +74,13 @@ Podés extraer el schema completo de cada endpoint desde `http://127.0.0.1:8000/
 
 ## Catálogo de tools
 
+> 📖 Cada tool tiene un **README dedicado** con JSON inputs/outputs copy-paste-ready, definición lista para function calling y notas de implementación. Hacé click en el título de cada endpoint para saltar a su doc.
+
 ### 🟢 Tier 1 — Solo `lat` / `lon`
 
 Dos floats. Ideales para empezar: una sola llamada, sin enums.
 
-#### `GET /weather`
+#### [`GET /weather`](domain/weather/README.md)
 Clima actual + forecast horario y diario 7d (Open-Meteo, cache 15 min).
 
 **Input**
@@ -103,7 +107,7 @@ Clima actual + forecast horario y diario 7d (Open-Meteo, cache 15 min).
 | `daily.et0_fao_evapotranspiration`     | ET₀ FAO diaria (mm)                                    | `[4.2, 4.5, ...]`        |
 | `daily.uv_index_max`                   | UV máximo diario                                       | `[10.5, 11.0, ...]`      |
 
-#### `GET /soil`
+#### [`GET /soil`](domain/soil/README.md)
 Perfil ISRIC SoilGrids 0–30 cm (cache 90 días).
 
 **Input**
@@ -128,7 +132,7 @@ Perfil ISRIC SoilGrids 0–30 cm (cache 90 días).
 | `dominant_texture`             | Textura del horizonte 0-5 cm                                      | `"clay loam"`          |
 | `interpretation`               | Resumen agronómico en español                                     | `"Horizonte superficial (0-5 cm): ligeramente ácido (pH 6.2)..."` |
 
-#### `GET /elevation`
+#### [`GET /elevation`](domain/elevation/README.md)
 Altitud m.s.n.m (Open-Meteo, cache 365 días).
 
 **Input**
@@ -145,7 +149,7 @@ Altitud m.s.n.m (Open-Meteo, cache 365 días).
 | `lat`, `lon`  | Coordenadas eco        | `14.76`, `-90.99` |
 | `elevation_m` | Altitud sobre el nivel del mar (m) | `2310.0` |
 
-#### `GET /frost-risk`
+#### [`GET /frost-risk`](domain/frost_risk/README.md)
 Índice 0–1 de helada 7d, ya corregido por elevación.
 
 **Input**
@@ -170,7 +174,7 @@ Altitud m.s.n.m (Open-Meteo, cache 365 días).
 | `factors.rule_notes`               | Lista de factores detectados, en español          | `["3 horas con T° < 0°C", ...]`         |
 | `interpretation`                   | Resumen para Gemma                                | `"Riesgo alto de helada los próximos 7 días..."` |
 
-#### `GET /geocode/reverse`
+#### [`GET /geocode/reverse`](domain/geocoding/README.md)
 `lat,lon` → país / estado / municipio.
 
 **Input**
@@ -195,7 +199,7 @@ Altitud m.s.n.m (Open-Meteo, cache 365 días).
 
 ### 🟢 Tier 2 — Tool chaining
 
-#### `GET /geocode`
+#### [`GET /geocode`](domain/geocoding/README.md)
 Texto libre → `lat,lon`. **Es la primera llamada** cuando el usuario menciona un lugar por nombre.
 
 **Input**
@@ -220,7 +224,7 @@ Texto libre → `lat,lon`. **Es la primera llamada** cuando el usuario menciona 
 
 ### 🟡 Tier 3 — `lat` / `lon` + 1 enum corto
 
-#### `GET /pest-risk`
+#### [`GET /pest-risk`](domain/pest_risk/README.md)
 Riesgo de plaga 7d (grados-día + humedad). Reusa cache de `/weather`.
 
 **Input**
@@ -248,7 +252,7 @@ Riesgo de plaga 7d (grados-día + humedad). Reusa cache de `/weather`.
 | `virus_coalert`             | Alerta de virus asociado (puede ser `null`)       | `null`                                                  |
 | `interpretation`            | Resumen para Gemma                                | `"Riesgo alto de gusano cogollero..."`                  |
 
-#### `GET /irrigation-risk`
+#### [`GET /irrigation-risk`](domain/irrigation_risk/README.md)
 Estrés hídrico 7d. Combina ET₀ Hargreaves con coeficientes Kc por cultivo y forecast de lluvia.
 
 **Input**
@@ -273,7 +277,7 @@ Estrés hídrico 7d. Combina ET₀ Hargreaves con coeficientes Kc por cultivo y 
 | `irrigation_recommendation_mm`       | **Mm de agua a aplicar** (campo accionable)     | `27.4`                                   |
 | `interpretation`                     | Resumen para Gemma                              | `"Aplicar ~27 mm de riego..."`           |
 
-#### `GET /harvest-window`
+#### [`GET /harvest-window`](domain/harvest_window/README.md)
 Ventana óptima de cosecha (T°, RH, lluvia, días secos).
 
 **Input**
@@ -303,7 +307,7 @@ Ventana óptima de cosecha (T°, RH, lluvia, días secos).
 
 ### 🟠 Tier 4 — Más parámetros / enum extenso
 
-#### `GET /disease-risk`
+#### [`GET /disease-risk`](domain/disease_risk/README.md)
 Cubre **~50 enfermedades** entre cultivos de granos, hortalizas, frutales, ornamentales y cacao/café/banano.
 
 **Input**
@@ -329,7 +333,7 @@ Cubre **~50 enfermedades** entre cultivos de granos, hortalizas, frutales, ornam
 | `factors.rule_notes`        | Factores detectados                               | `["T° media 22.4°C en rango óptimo [21-25°C]", "RH 84% ≥ 80%", "4 días lluviosos"]` |
 | `interpretation`            | Resumen para Gemma                                | `"Riesgo alto de roya del café (Hemileia vastatrix)..."` |
 
-#### `GET /climate/history`
+#### [`GET /climate/history`](domain/climate/README.md)
 Histórico desde 1981 (NASA POWER comunidad AG). Para preguntas tipo *"¿llovió más este año que el promedio?"*.
 
 **Input**
@@ -356,7 +360,7 @@ Histórico desde 1981 (NASA POWER comunidad AG). Para preguntas tipo *"¿llovió
 | `series[].rh_pct`         | Humedad relativa (%)                                       | `71`                                     |
 | `series[].solar_mj_m2`    | Radiación solar (MJ/m²/día o /mes)                         | `540.2`                                  |
 
-#### `GET /gbif/species`
+#### [`GET /gbif/species`](domain/gbif/README.md)
 Ocurrencias documentadas de una especie en un país (GBIF). Útil para *"¿se ha visto el gusano cogollero en Guatemala?"*.
 
 **Input**
@@ -393,20 +397,20 @@ Ocurrencias documentadas de una especie en un país (GBIF). Útil para *"¿se ha
 
 ## Tabla resumen
 
-| Tool                         | Inputs                                    | Output clave                          |
-| ---------------------------- | ----------------------------------------- | ------------------------------------- |
-| `GET /geocode`               | `q`, `country?`                           | `lat`, `lon`, lugar                   |
-| `GET /geocode/reverse`       | `lat`, `lon`                              | país, estado, municipio               |
-| `GET /weather`               | `lat`, `lon`                              | current + hourly + daily 7d           |
-| `GET /soil`                  | `lat`, `lon`                              | 3 horizontes + textura + interpretación|
-| `GET /elevation`             | `lat`, `lon`                              | `elevation_m`                         |
-| `GET /frost-risk`            | `lat`, `lon`                              | `risk_score`, `risk_level`, factores  |
-| `GET /pest-risk`             | `lat`, `lon`, `pest`                      | `risk_score`, factores, virus coalert |
-| `GET /irrigation-risk`       | `lat`, `lon`, `crop`                      | `risk_score`, mm a aplicar            |
-| `GET /harvest-window`        | `lat`, `lon`, `crop`                      | `window_score`, fechas óptimas        |
-| `GET /disease-risk`          | `lat`, `lon`, `disease`                   | `risk_score`, factores                |
-| `GET /climate/history`       | `lat`, `lon`, `start`, `end`, `granularity?` | serie temporal                     |
-| `GET /gbif/species`          | `scientific_name`, `country`, `limit?`    | ocurrencias, regiones, años           |
+| Tool                                                      | Inputs                                       | Output clave                            |
+| --------------------------------------------------------- | -------------------------------------------- | --------------------------------------- |
+| [`GET /geocode`](domain/geocoding/README.md)              | `q`, `country?`                              | `lat`, `lon`, lugar                     |
+| [`GET /geocode/reverse`](domain/geocoding/README.md)      | `lat`, `lon`                                 | país, estado, municipio                 |
+| [`GET /weather`](domain/weather/README.md)                | `lat`, `lon`                                 | current + hourly + daily 7d             |
+| [`GET /soil`](domain/soil/README.md)                      | `lat`, `lon`                                 | 3 horizontes + textura + interpretación |
+| [`GET /elevation`](domain/elevation/README.md)            | `lat`, `lon`                                 | `elevation_m`                           |
+| [`GET /frost-risk`](domain/frost_risk/README.md)          | `lat`, `lon`                                 | `risk_score`, `risk_level`, factores    |
+| [`GET /pest-risk`](domain/pest_risk/README.md)            | `lat`, `lon`, `pest`                         | `risk_score`, factores, virus coalert   |
+| [`GET /irrigation-risk`](domain/irrigation_risk/README.md)| `lat`, `lon`, `crop`                         | `risk_score`, mm a aplicar              |
+| [`GET /harvest-window`](domain/harvest_window/README.md)  | `lat`, `lon`, `crop`                         | `window_score`, fechas óptimas          |
+| [`GET /disease-risk`](domain/disease_risk/README.md)      | `lat`, `lon`, `disease`                      | `risk_score`, factores                  |
+| [`GET /climate/history`](domain/climate/README.md)        | `lat`, `lon`, `start`, `end`, `granularity?` | serie temporal                          |
+| [`GET /gbif/species`](domain/gbif/README.md)              | `scientific_name`, `country`, `limit?`       | ocurrencias, regiones, años             |
 
 ---
 

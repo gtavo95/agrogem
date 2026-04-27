@@ -11,6 +11,7 @@ class GeocodeResult(BaseModel):
     state: str | None = None
     municipality: str | None = None
     type: str | None = None
+    interpretation: str = ""
 
 
 class ReverseGeocodeResult(BaseModel):
@@ -23,3 +24,4 @@ class ReverseGeocodeResult(BaseModel):
     state: str | None = None
     municipality: str | None = None
     type: str | None = None
+    interpretation: str = ""

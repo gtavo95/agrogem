@@ -41,3 +41,4 @@ class WeatherResponse(BaseModel):
     current: CurrentWeather
     hourly: HourlyForecast
     daily: DailyForecast
+    interpretation: str = ""

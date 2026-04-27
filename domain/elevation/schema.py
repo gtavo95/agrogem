@@ -7,3 +7,4 @@ class ElevationResponse(BaseModel):
     lat: float
     lon: float
     elevation_m: float
+    interpretation: str = ""

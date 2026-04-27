@@ -32,3 +32,4 @@ class ClimateHistoryResponse(BaseModel):
     start: str
     end: str
     series: list[ClimatePoint]
+    interpretation: str = ""
