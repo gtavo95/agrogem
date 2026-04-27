@@ -1,0 +1,20 @@
+# Harvest Window Endpoint
+# Tests optimal harvest window conditions
+
+GET http://localhost:8000/harvest-window?lat=14.6&lon=-90.5&crop=corn
+Accept: application/json
+
+### Coffee harvest
+
+GET http://localhost:8000/harvest-window?lat=14.6&lon=-90.5&crop=coffee
+Accept: application/json
+
+### Strawberry
+
+GET http://localhost:8000/harvest-window?lat=14.6&lon=-90.5&crop=strawberry
+Accept: application/json
+
+### Tomato
+
+GET http://localhost:8000/harvest-window?lat=14.6&lon=-90.5&crop=tomato
+Accept: application/json

@@ -3,7 +3,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
-ConfidenceLabel = Literal["high", "medium", "low"]
+ConfidenceLabel = Literal["high", "medium"]
 
 
 class PestMatch(BaseModel):

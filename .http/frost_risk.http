@@ -1,0 +1,15 @@
+# Frost Risk Endpoint
+# Tests frost risk using elevation correction
+
+GET http://localhost:8000/frost-risk?lat=-0.2&lon=-78.5
+Accept: application/json
+
+### Highland location (Andes - Ecuador)
+
+GET http://localhost:8000/frost-risk?lat=-0.6&lon=-78.5
+Accept: application/json
+
+### High altitude location
+
+GET http://localhost:8000/frost-risk?lat=-0.9&lon=-78.6
+Accept: application/json

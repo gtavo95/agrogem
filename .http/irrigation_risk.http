@@ -1,0 +1,15 @@
+# Irrigation Risk Endpoint
+# Tests water stress risk for crops
+
+GET http://localhost:8000/irrigation-risk?lat=14.6&lon=-90.5&crop=corn
+Accept: application/json
+
+###
+
+GET http://localhost:8000/irrigation-risk?lat=14.6&lon=-90.5&crop=rice
+Accept: application/json
+
+###
+
+GET http://localhost:8000/irrigation-risk?lat=14.6&lon=-90.5&crop=coffee
+Accept: application/json

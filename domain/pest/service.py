@@ -1,3 +1,4 @@
+import os
 import uuid
 from collections import defaultdict
 
@@ -17,10 +18,12 @@ QUERY_CONTENT_TYPE = "image/jpeg"
 UPLOAD_URL_TTL_SECONDS = 15 * 60
 
 DEFAULT_TOP_K = 5
-# Cutoff below which the top weighted class is considered "not in library".
-# Calibrate via scripts/calibrate_knn.py before relying on this.
-MIN_CONFIDENCE_RATIO = 0.827
-HIGH_CONFIDENCE_RATIO = 0.75
+# Piso empírico: debajo de esto, el match se considera "fuera de librería".
+# Calibrado con scripts/calibrate_knn.py. Ajustable sin deploy vía env var.
+MIN_CONFIDENCE_RATIO = float(os.environ.get("PEST_MIN_CONFIDENCE_RATIO", "0.827"))
+# Encima de este ratio el voto es claramente dominante; debajo (pero sobre el
+# piso) es un match aceptado pero menos contundente.
+HIGH_CONFIDENCE_RATIO = float(os.environ.get("PEST_HIGH_CONFIDENCE_RATIO", "0.95"))
 
 
 def generate_pest_upload_url(storage: PestStorage) -> UploadUrlResponse:
@@ -78,8 +81,5 @@ async def identify_pest(
 
 
 def _label_confidence(ratio: float) -> ConfidenceLabel:
-    if ratio >= HIGH_CONFIDENCE_RATIO:
-        return "high"
-    if ratio >= MIN_CONFIDENCE_RATIO:
-        return "medium"
-    return "low"
+    # Pre: el caller ya filtró ratio >= MIN_CONFIDENCE_RATIO.
+    return "high" if ratio >= HIGH_CONFIDENCE_RATIO else "medium"
