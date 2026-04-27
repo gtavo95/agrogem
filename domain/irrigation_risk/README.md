@@ -1,10 +1,10 @@
-# `/irrigation-risk` — Riesgo de estrés hídrico 7 días
+# `/irrigation-risk` — 7-day water stress risk
 
-Tier 🟡 3 · Derivado de `/weather` · Sin cache propio (reusa el de weather, 15 min).
+Tier 🟡 3 · Derived from `/weather` · No own cache (reuses weather cache, 15 min).
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
-Combina ET₀ (Hargreaves) con coeficientes Kc por cultivo y forecast de precipitación para estimar el déficit y la cantidad de agua a aplicar.
+Combines Hargreaves ET₀ with crop Kc coefficients and the rainfall forecast to estimate the deficit and the amount of water to apply.
 
 ## Endpoint
 
@@ -14,11 +14,11 @@ GET /irrigation-risk?lat=<float>&lon=<float>&crop=<enum>
 
 ## Input
 
-| Parámetro | Tipo  | Requerido | Valores                                                                                                            | Ejemplo    |
-| --------- | ----- | --------- | ------------------------------------------------------------------------------------------------------------------ | ---------- |
-| `lat`     | float | sí        | `[-90, 90]`                                                                                                        | `14.6`     |
-| `lon`     | float | sí        | `[-180, 180]`                                                                                                      | `-90.5`    |
-| `crop`    | enum  | sí        | `corn` · `rice` · `bean` · `wheat` · `coffee` · `sugarcane` · `banana` · `tomato` · `potato` · `onion` · `broccoli` · `rose` | `"potato"` |
+| Parameter | Type  | Required | Values                                                                                                                | Example    |
+| --------- | ----- | -------- | --------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `lat`     | float | yes      | `[-90, 90]`                                                                                                           | `14.6`     |
+| `lon`     | float | yes      | `[-180, 180]`                                                                                                         | `-90.5`    |
+| `crop`    | enum  | yes      | `corn` · `rice` · `bean` · `wheat` · `coffee` · `sugarcane` · `banana` · `tomato` · `potato` · `onion` · `broccoli` · `rose` | `"potato"` |
 
 ### Request
 
@@ -58,26 +58,26 @@ Accept: application/json
 }
 ```
 
-### Campos
+### Fields
 
-| Campo                                | Tipo         | Descripción                                              |
+| Field                                | Type         | Description                                              |
 | ------------------------------------ | ------------ | -------------------------------------------------------- |
-| `risk_score`                         | float (0–1)  | Índice compuesto                                         |
+| `risk_score`                         | float (0–1)  | Composite index                                          |
 | `risk_level`                         | enum         | `low` / `moderate` / `high` / `very_high`                |
-| `factors.et0_sum_mm`                 | float (mm)   | ET₀ FAO total en la ventana                              |
-| `factors.precipitation_sum_mm`       | float (mm)   | Lluvia forecast total                                    |
-| `factors.crop_water_requirement_mm`  | float (mm)   | Demanda hídrica del cultivo (`ET₀ × Kc`)                 |
-| `factors.soil_water_deficit_mm`      | float (mm)   | Déficit estimado en suelo                                |
-| `factors.rule_notes`                 | string[]     | Factores detectados                                      |
-| `irrigation_recommendation_mm`       | float (mm)   | **Mm a aplicar** (campo accionable para el productor)    |
-| `interpretation`                     | string       | Resumen para Gemma                                       |
+| `factors.et0_sum_mm`                 | float (mm)   | Total FAO ET₀ in the window                              |
+| `factors.precipitation_sum_mm`       | float (mm)   | Forecast total rainfall                                  |
+| `factors.crop_water_requirement_mm`  | float (mm)   | Crop water demand (`ET₀ × Kc`)                           |
+| `factors.soil_water_deficit_mm`      | float (mm)   | Estimated soil deficit                                   |
+| `factors.rule_notes`                 | string[]     | Detected factors                                         |
+| `irrigation_recommendation_mm`       | float (mm)   | **Mm to apply** (actionable field for the farmer)        |
+| `interpretation`                     | string       | Spanish summary for Gemma                                |
 
-### Errores
+### Errors
 
-| Status | Causa                                              |
+| Status | Cause                                              |
 | ------ | -------------------------------------------------- |
-| 422    | `crop` no reconocido o `lat`/`lon` fuera de rango  |
-| 502    | Weather provider caído                             |
+| 422    | Unrecognized `crop` or `lat`/`lon` out of range    |
+| 502    | Weather provider down                              |
 
 ## Tool definition (function calling)
 
@@ -102,9 +102,9 @@ Accept: application/json
 }
 ```
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
-- Service: [`service.py`](service.py) — coeficientes Kc en `_CROP_KC`
+- Service: [`service.py`](service.py) — Kc coefficients in `_CROP_KC`
 - Schema: [`schema.py`](schema.py)
-- Composición: depende de `domain/weather`
+- Composition: depends on `domain/weather`

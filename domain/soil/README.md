@@ -1,8 +1,8 @@
-# `/soil` — Perfil de suelo 0–30 cm
+# `/soil` — Soil profile 0–30 cm
 
-Tier 🟢 1 · Fuente: [ISRIC SoilGrids v2.0](https://www.isric.org/explore/soilgrids) · Cache Redis 90 días · Sin API key.
+Tier 🟢 1 · Source: [ISRIC SoilGrids v2.0](https://www.isric.org/explore/soilgrids) · Redis cache 90 days · No API key.
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
 ## Endpoint
 
@@ -12,10 +12,10 @@ GET /soil?lat=<float>&lon=<float>
 
 ## Input
 
-| Parámetro | Tipo  | Requerido | Rango          | Descripción | Ejemplo  |
-| --------- | ----- | --------- | -------------- | ----------- | -------- |
-| `lat`     | float | sí        | `[-90, 90]`    | Latitud     | `14.5586`|
-| `lon`     | float | sí        | `[-180, 180]`  | Longitud    | `-90.7295`|
+| Parameter | Type  | Required | Range          | Description | Example   |
+| --------- | ----- | -------- | -------------- | ----------- | --------- |
+| `lat`     | float | yes      | `[-90, 90]`    | Latitude    | `14.5586` |
+| `lon`     | float | yes      | `[-180, 180]`  | Longitude   | `-90.7295`|
 
 ### Request
 
@@ -76,30 +76,30 @@ Accept: application/json
 }
 ```
 
-### Campos
+### Fields
 
-| Campo                              | Tipo               | Descripción                                |
+| Field                              | Type               | Description                                |
 | ---------------------------------- | ------------------ | ------------------------------------------ |
-| `horizons[]`                       | array (3)          | Horizontes `0-5cm`, `5-15cm`, `15-30cm`    |
-| `horizons[].depth`                 | string             | Rango de profundidad                       |
-| `horizons[].ph`                    | float (pH)         | pH en H₂O                                  |
-| `horizons[].soc_g_per_kg`          | float (g/kg)       | Carbono orgánico                           |
-| `horizons[].nitrogen_g_per_kg`     | float (g/kg)       | Nitrógeno total                            |
-| `horizons[].clay_pct`              | float (%)          | Arcilla                                    |
-| `horizons[].sand_pct`              | float (%)          | Arena                                      |
-| `horizons[].silt_pct`              | float (%)          | Limo                                       |
-| `horizons[].cec_mmol_per_kg`       | float (mmol(c)/kg) | Capacidad de intercambio catiónico         |
-| `horizons[].texture_class`         | string             | Clase USDA derivada                        |
-| `dominant_texture`                 | string             | Textura del horizonte 0-5 cm               |
-| `interpretation`                   | string             | Resumen agronómico en español para Gemma   |
+| `horizons[]`                       | array (3)          | Horizons `0-5cm`, `5-15cm`, `15-30cm`      |
+| `horizons[].depth`                 | string             | Depth range                                |
+| `horizons[].ph`                    | float (pH)         | pH in H₂O                                  |
+| `horizons[].soc_g_per_kg`          | float (g/kg)       | Soil organic carbon                        |
+| `horizons[].nitrogen_g_per_kg`     | float (g/kg)       | Total nitrogen                             |
+| `horizons[].clay_pct`              | float (%)          | Clay                                       |
+| `horizons[].sand_pct`              | float (%)          | Sand                                       |
+| `horizons[].silt_pct`              | float (%)          | Silt                                       |
+| `horizons[].cec_mmol_per_kg`       | float (mmol(c)/kg) | Cation exchange capacity                   |
+| `horizons[].texture_class`         | string             | Derived USDA class                         |
+| `dominant_texture`                 | string             | Texture of the 0-5 cm horizon              |
+| `interpretation`                   | string             | Spanish agronomic summary for Gemma        |
 
-### Errores
+### Errors
 
-| Status | Causa                                                                     |
+| Status | Cause                                                                     |
 | ------ | ------------------------------------------------------------------------- |
-| 404    | Sin cobertura (océano, cuerpos de agua, latitudes extremas)               |
-| 422    | `lat`/`lon` fuera de rango                                                |
-| 502    | ISRIC SoilGrids caído o timeout                                           |
+| 404    | No coverage (ocean, water bodies, extreme latitudes)                      |
+| 422    | `lat`/`lon` out of range                                                  |
+| 502    | ISRIC SoilGrids down or timed out                                         |
 
 ## Tool definition (function calling)
 
@@ -118,10 +118,10 @@ Accept: application/json
 }
 ```
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
 - Service: [`service.py`](service.py)
 - Schema: [`schema.py`](schema.py)
-- Provider HTTP: [`providers/soilgrids/soil_provider.py`](../../providers/soilgrids/soil_provider.py)
-- Cache Redis: [`providers/redis/soil_cache.py`](../../providers/redis/soil_cache.py)
+- HTTP provider: [`providers/soilgrids/soil_provider.py`](../../providers/soilgrids/soil_provider.py)
+- Redis cache: [`providers/redis/soil_cache.py`](../../providers/redis/soil_cache.py)

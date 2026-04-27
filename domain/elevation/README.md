@@ -1,8 +1,8 @@
-# `/elevation` — Altitud m.s.n.m
+# `/elevation` — Altitude (m a.s.l.)
 
-Tier 🟢 1 · Fuente: [Open-Meteo Elevation](https://open-meteo.com/en/docs/elevation-api) · Cache Redis 365 días · Sin API key.
+Tier 🟢 1 · Source: [Open-Meteo Elevation](https://open-meteo.com/en/docs/elevation-api) · Redis cache 365 days · No API key.
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
 ## Endpoint
 
@@ -12,10 +12,10 @@ GET /elevation?lat=<float>&lon=<float>
 
 ## Input
 
-| Parámetro | Tipo  | Requerido | Rango          | Descripción | Ejemplo  |
-| --------- | ----- | --------- | -------------- | ----------- | -------- |
-| `lat`     | float | sí        | `[-90, 90]`    | Latitud     | `14.5586`|
-| `lon`     | float | sí        | `[-180, 180]`  | Longitud    | `-90.7295`|
+| Parameter | Type  | Required | Range          | Description | Example   |
+| --------- | ----- | -------- | -------------- | ----------- | --------- |
+| `lat`     | float | yes      | `[-90, 90]`    | Latitude    | `14.5586` |
+| `lon`     | float | yes      | `[-180, 180]`  | Longitude   | `-90.7295`|
 
 ### Request
 
@@ -41,17 +41,17 @@ Accept: application/json
 }
 ```
 
-### Campos
+### Fields
 
-| Campo            | Tipo       | Descripción                                                      |
+| Field            | Type       | Description                                                      |
 | ---------------- | ---------- | ---------------------------------------------------------------- |
-| `lat`, `lon`     | float      | Coordenadas eco                                                  |
-| `elevation_m`    | float (m)  | Altitud sobre el nivel del mar                                   |
-| `interpretation` | string     | Resumen en español con clasificación por piso altitudinal        |
+| `lat`, `lon`     | float      | Echoed coordinates                                               |
+| `elevation_m`    | float (m)  | Altitude above sea level                                         |
+| `interpretation` | string     | Spanish summary with altitudinal-belt classification             |
 
-### Pisos altitudinales
+### Altitudinal belts
 
-| Rango (m) | Piso                                |
+| Range (m) | Belt                                |
 | --------- | ----------------------------------- |
 | `< 800`   | tierra caliente / costa             |
 | `< 1800`  | tierra templada / piso cafetero     |
@@ -59,13 +59,13 @@ Accept: application/json
 | `< 3500`  | tierra muy fría / altiplano         |
 | `≥ 3500`  | páramo / puna alta                  |
 
-### Errores
+### Errors
 
-| Status | Causa                                  |
+| Status | Cause                                  |
 | ------ | -------------------------------------- |
-| 404    | Sin dato para esas coordenadas         |
-| 422    | `lat`/`lon` fuera de rango             |
-| 502    | Open-Meteo caído o timeout             |
+| 404    | No data for those coordinates          |
+| 422    | `lat`/`lon` out of range               |
+| 502    | Open-Meteo down or timed out           |
 
 ## Tool definition (function calling)
 
@@ -84,10 +84,10 @@ Accept: application/json
 }
 ```
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
 - Service: [`service.py`](service.py)
 - Schema: [`schema.py`](schema.py)
-- Provider HTTP: [`providers/openmeteo/elevation_provider.py`](../../providers/openmeteo/elevation_provider.py)
-- Cache Redis: [`providers/redis/elevation_cache.py`](../../providers/redis/elevation_cache.py)
+- HTTP provider: [`providers/openmeteo/elevation_provider.py`](../../providers/openmeteo/elevation_provider.py)
+- Redis cache: [`providers/redis/elevation_cache.py`](../../providers/redis/elevation_cache.py)

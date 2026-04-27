@@ -1,21 +1,21 @@
-# `/geocode` y `/geocode/reverse` — Geocoding
+# `/geocode` and `/geocode/reverse` — Geocoding
 
-Tier 🟢 2 (forward) · 🟢 1 (reverse) · Fuente: [Nominatim](https://nominatim.org/) (OpenStreetMap) · Cache Redis 30 días.
+Tier 🟢 2 (forward) · 🟢 1 (reverse) · Source: [Nominatim](https://nominatim.org/) (OpenStreetMap) · Redis cache 30 days.
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
-Pensado como **primera tool** del agente: el LLM traduce *"mi finca en Tecpán"* a coordenadas antes de llamar a `/weather`, `/soil`, etc.
+Designed as the **agent's first tool**: the LLM translates *"my farm in Tecpán"* into coordinates before calling `/weather`, `/soil`, etc.
 
 ---
 
-## `GET /geocode` — Forward (texto → coords)
+## `GET /geocode` — Forward (text → coords)
 
 ### Input
 
-| Parámetro | Tipo   | Requerido | Descripción                                     | Ejemplo                |
-| --------- | ------ | --------- | ----------------------------------------------- | ---------------------- |
-| `q`       | string | sí        | Texto libre, mín. 1 carácter                    | `"Chimaltenango"`      |
-| `country` | string | no        | Filtro ISO alpha-2 (reduce ambigüedad)          | `"GT"`                 |
+| Parameter | Type   | Required | Description                                 | Example                |
+| --------- | ------ | -------- | ------------------------------------------- | ---------------------- |
+| `q`       | string | yes      | Free-form text, min. 1 character            | `"Chimaltenango"`      |
+| `country` | string | no       | ISO alpha-2 filter (reduces ambiguity)      | `"GT"`                 |
 
 ### Request
 
@@ -43,24 +43,24 @@ Accept: application/json
 }
 ```
 
-### Errores
+### Errors
 
-| Status | Causa                                |
+| Status | Cause                                |
 | ------ | ------------------------------------ |
-| 404    | Ninguna coincidencia                 |
-| 422    | `q` vacío o `country` inválido       |
-| 502    | Nominatim caído o timeout            |
+| 404    | No match                             |
+| 422    | Empty `q` or invalid `country`       |
+| 502    | Nominatim down or timed out          |
 
 ---
 
-## `GET /geocode/reverse` — Reverse (coords → lugar)
+## `GET /geocode/reverse` — Reverse (coords → place)
 
 ### Input
 
-| Parámetro | Tipo  | Requerido | Rango          | Descripción | Ejemplo  |
-| --------- | ----- | --------- | -------------- | ----------- | -------- |
-| `lat`     | float | sí        | `[-90, 90]`    | Latitud     | `14.5586`|
-| `lon`     | float | sí        | `[-180, 180]`  | Longitud    | `-90.7295`|
+| Parameter | Type  | Required | Range          | Description | Example   |
+| --------- | ----- | -------- | -------------- | ----------- | --------- |
+| `lat`     | float | yes      | `[-90, 90]`    | Latitude    | `14.5586` |
+| `lon`     | float | yes      | `[-180, 180]`  | Longitude   | `-90.7295`|
 
 ### Request
 
@@ -88,27 +88,27 @@ Accept: application/json
 }
 ```
 
-### Errores
+### Errors
 
-| Status | Causa                                  |
+| Status | Cause                                  |
 | ------ | -------------------------------------- |
-| 404    | Sin resultado para esas coordenadas    |
-| 422    | `lat`/`lon` fuera de rango             |
-| 502    | Nominatim caído o timeout              |
+| 404    | No result for those coordinates        |
+| 422    | `lat`/`lon` out of range               |
+| 502    | Nominatim down or timed out            |
 
 ---
 
-## Campos (ambos endpoints)
+## Fields (both endpoints)
 
-| Campo          | Tipo         | Descripción                                  |
-| -------------- | ------------ | -------------------------------------------- |
-| `lat`, `lon`   | float        | Coordenadas (devueltas o resueltas)          |
-| `display_name` | string       | Etiqueta completa del lugar                  |
-| `country_code` | string\|null | ISO alpha-2 en minúsculas                    |
-| `state`        | string\|null | Departamento / estado / provincia            |
-| `municipality` | string\|null | Municipio / ciudad                           |
-| `type`         | string\|null | Tipo OSM (administrative, village, city…)    |
-| `interpretation` | string     | Resumen en español listo para Gemma          |
+| Field            | Type         | Description                                  |
+| ---------------- | ------------ | -------------------------------------------- |
+| `lat`, `lon`     | float        | Coordinates (returned or resolved)           |
+| `display_name`   | string       | Full place label                             |
+| `country_code`   | string\|null | Lowercase ISO alpha-2                        |
+| `state`          | string\|null | Department / state / province                |
+| `municipality`   | string\|null | Municipality / city                          |
+| `type`           | string\|null | OSM type (administrative, village, city…)    |
+| `interpretation` | string       | Spanish summary ready for Gemma              |
 
 ## Tool definitions (function calling)
 
@@ -142,16 +142,16 @@ Accept: application/json
 }
 ```
 
-## Notas operativas
+## Operational notes
 
-- Nominatim público limita a ~1 req/s y exige `User-Agent` identificable (`agrogem/1.0`).
-- El cache agresivo (30 días, keys `geocode:fwd:{country|ANY}:{query}` y `geocode:rev:{lat}:{lon}`) absorbe la mayoría del tráfico.
-- Para volumen alto: self-hostear Nominatim o cambiar el adapter a Mapbox / LocationIQ / Google.
+- Public Nominatim limits to ~1 req/s and requires an identifying `User-Agent` (`agrogem/1.0`).
+- The aggressive cache (30 days, keys `geocode:fwd:{country|ANY}:{query}` and `geocode:rev:{lat}:{lon}`) absorbs most traffic.
+- For high volume: self-host Nominatim or swap the adapter to Mapbox / LocationIQ / Google.
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
 - Service: [`service.py`](service.py)
 - Schema: [`schema.py`](schema.py)
-- Provider HTTP: [`providers/nominatim/geocoding_provider.py`](../../providers/nominatim/geocoding_provider.py)
-- Cache Redis: [`providers/redis/geocoding_cache.py`](../../providers/redis/geocoding_cache.py)
+- HTTP provider: [`providers/nominatim/geocoding_provider.py`](../../providers/nominatim/geocoding_provider.py)
+- Redis cache: [`providers/redis/geocoding_cache.py`](../../providers/redis/geocoding_cache.py)

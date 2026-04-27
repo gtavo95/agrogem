@@ -1,10 +1,10 @@
-# `/gbif/species` — Ocurrencias documentadas de una especie
+# `/gbif/species` — Documented species occurrences
 
-Tier 🟠 4 · Fuente: [GBIF](https://www.gbif.org/) · Cache Redis 24 h.
+Tier 🟠 4 · Source: [GBIF](https://www.gbif.org/) · Redis cache 24 h.
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
-Útil para *"¿se ha visto el gusano cogollero en Guatemala?"* o *"¿en qué regiones del país hay reportes de Hemileia vastatrix?"*.
+Useful for *"has fall armyworm been seen in Guatemala?"* or *"in which regions of the country are there reports of Hemileia vastatrix?"*.
 
 ## Endpoint
 
@@ -14,11 +14,11 @@ GET /gbif/species?scientific_name=<string>&country=<ISO2>&limit=<int>
 
 ## Input
 
-| Parámetro         | Tipo   | Requerido | Descripción                                | Ejemplo                    |
-| ----------------- | ------ | --------- | ------------------------------------------ | -------------------------- |
-| `scientific_name` | string | sí        | Nombre científico binomial (≥ 2 chars)     | `"Spodoptera frugiperda"`  |
-| `country`         | string | sí        | ISO alpha-2 (2 chars exactos)              | `"GT"`                     |
-| `limit`           | int    | no        | Tamaño de muestra `[1, 300]`, default 300  | `300`                      |
+| Parameter         | Type   | Required | Description                                | Example                    |
+| ----------------- | ------ | -------- | ------------------------------------------ | -------------------------- |
+| `scientific_name` | string | yes      | Binomial scientific name (≥ 2 chars)       | `"Spodoptera frugiperda"`  |
+| `country`         | string | yes      | ISO alpha-2 (exactly 2 chars)              | `"GT"`                     |
+| `limit`           | int    | no       | Sample size `[1, 300]`, default 300        | `300`                      |
 
 ### Request
 
@@ -66,27 +66,27 @@ Accept: application/json
 }
 ```
 
-### Campos
+### Fields
 
-| Campo                         | Tipo                       | Descripción                                  |
+| Field                         | Type                       | Description                                  |
 | ----------------------------- | -------------------------- | -------------------------------------------- |
-| `found`                       | bool                       | Si la especie fue encontrada en GBIF         |
-| `scientific_name`             | string \| null             | Nombre canónico                              |
-| `kingdom`, `family`           | string \| null             | Taxonomía                                    |
-| `common_names[]`              | array                      | Nombres comunes con idioma ISO               |
-| `country`                     | string                     | País consultado                              |
-| `total_records_in_country`    | int                        | Total de ocurrencias                         |
-| `records_in_sample`           | int                        | Cuántas se trajeron en esta llamada          |
-| `top_regions`                 | (string, int)[]            | Regiones con más reportes                    |
-| `recent_years`                | dict[string, int]          | Reportes por año reciente                    |
-| `interpretation`              | string                     | Resumen para Gemma                           |
+| `found`                       | bool                       | Whether the species was found in GBIF        |
+| `scientific_name`             | string \| null             | Canonical name                               |
+| `kingdom`, `family`           | string \| null             | Taxonomy                                     |
+| `common_names[]`              | array                      | Common names with ISO language code          |
+| `country`                     | string                     | Queried country                              |
+| `total_records_in_country`    | int                        | Total occurrences                            |
+| `records_in_sample`           | int                        | How many were fetched in this call           |
+| `top_regions`                 | (string, int)[]            | Regions with the most reports                |
+| `recent_years`                | dict[string, int]          | Reports per recent year                      |
+| `interpretation`              | string                     | Spanish summary for Gemma                    |
 
-### Errores
+### Errors
 
-| Status | Causa                                              |
-| ------ | -------------------------------------------------- |
-| 422    | `country` no es ISO alpha-2 o `limit` fuera de rango |
-| 502    | GBIF caído o timeout                               |
+| Status | Cause                                                |
+| ------ | ---------------------------------------------------- |
+| 422    | `country` not ISO alpha-2 or `limit` out of range    |
+| 502    | GBIF down or timed out                               |
 
 ## Tool definition (function calling)
 
@@ -115,9 +115,9 @@ Accept: application/json
 }
 ```
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
 - Service: [`service.py`](service.py)
 - Schema: [`schema.py`](schema.py)
-- Repository / cache: capa Redis directa
+- Repository / cache: direct Redis layer

@@ -1,10 +1,10 @@
-# `/disease-risk` — Riesgo de enfermedad fitopatológica 7 días
+# `/disease-risk` — 7-day phytopathological disease risk
 
-Tier 🟠 4 · Derivado de `/weather` · Sin cache propio (reusa el de weather, 15 min).
+Tier 🟠 4 · Derived from `/weather` · No own cache (reuses weather cache, 15 min).
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
-Combina forecast horario (T° media, humedad relativa, días lluviosos) con umbrales agronómicos específicos por enfermedad. Cubre **~50 enfermedades** entre granos, hortalizas, frutales, ornamentales, cacao, café y banano.
+Combines the hourly forecast (mean temperature, relative humidity, rainy days) with disease-specific agronomic thresholds. Covers **~50 diseases** across grains, vegetables, fruit trees, ornamentals, cocoa, coffee and banana.
 
 ## Endpoint
 
@@ -14,13 +14,13 @@ GET /disease-risk?lat=<float>&lon=<float>&disease=<enum>
 
 ## Input
 
-| Parámetro | Tipo  | Requerido | Descripción                  | Ejemplo         |
-| --------- | ----- | --------- | ---------------------------- | --------------- |
-| `lat`     | float | sí        | `[-90, 90]`                  | `14.5586`       |
-| `lon`     | float | sí        | `[-180, 180]`                | `-90.7295`      |
-| `disease` | enum  | sí        | Una de las ~50 enfermedades  | `"coffee_rust"` |
+| Parameter | Type  | Required | Description                  | Example         |
+| --------- | ----- | -------- | ---------------------------- | --------------- |
+| `lat`     | float | yes      | `[-90, 90]`                  | `14.5586`       |
+| `lon`     | float | yes      | `[-180, 180]`                | `-90.7295`      |
+| `disease` | enum  | yes      | One of the ~50 diseases      | `"coffee_rust"` |
 
-### Enum `disease` (50 valores)
+### `disease` enum (50 values)
 
 ```
 coffee_rust · late_blight · corn_rust · wheat_leaf_rust · wheat_yellow_rust · wheat_stem_rust ·
@@ -37,7 +37,7 @@ oil_palm_ganoderma · corn_gray_leaf_spot · corn_northern_leaf_blight · corn_s
 coffee_cercospora
 ```
 
-> 💡 Tip: para function calling, **inyectá dinámicamente** solo las enfermedades del cultivo del usuario en el `enum` de la tool. Mantiene el prompt corto y enfocado.
+> 💡 Tip: for function calling, **dynamically inject** only the diseases relevant to the user's crop into the tool's `enum`. Keeps the prompt short and focused.
 
 ### Request
 
@@ -76,29 +76,29 @@ Accept: application/json
 }
 ```
 
-### Campos
+### Fields
 
-| Campo                       | Tipo            | Descripción                                       |
+| Field                       | Type            | Description                                       |
 | --------------------------- | --------------- | ------------------------------------------------- |
-| `disease`                   | enum            | Enfermedad consultada                             |
-| `risk_score`                | float (0–1)     | Índice compuesto                                  |
+| `disease`                   | enum            | Queried disease                                   |
+| `risk_score`                | float (0–1)     | Composite index                                   |
 | `risk_level`                | enum            | `low` / `moderate` / `high` / `very_high`         |
-| `factors.avg_temp_c`        | float \| null   | T° media horaria de la ventana                    |
-| `factors.avg_humidity_pct`  | float \| null   | Humedad relativa media                            |
-| `factors.rainy_days`        | int             | Días con precipitación ≥ 1 mm                     |
-| `factors.rule_notes`        | string[]        | Condiciones favorables detectadas                 |
-| `interpretation`            | string          | Resumen para Gemma                                |
+| `factors.avg_temp_c`        | float \| null   | Mean hourly temperature in the window             |
+| `factors.avg_humidity_pct`  | float \| null   | Mean relative humidity                            |
+| `factors.rainy_days`        | int             | Days with precipitation ≥ 1 mm                    |
+| `factors.rule_notes`        | string[]        | Detected favorable conditions                     |
+| `interpretation`            | string          | Spanish summary for Gemma                         |
 
-### Errores
+### Errors
 
-| Status | Causa                                                |
+| Status | Cause                                                |
 | ------ | ---------------------------------------------------- |
-| 422    | `disease` no reconocida o `lat`/`lon` fuera de rango |
-| 502    | Weather provider caído                               |
+| 422    | Unrecognized `disease` or `lat`/`lon` out of range   |
+| 502    | Weather provider down                                |
 
 ## Tool definition (function calling)
 
-> Para Gemma, recortá el `enum` a solo las enfermedades del cultivo del usuario.
+> For Gemma, trim the `enum` to only the diseases relevant to the user's crop.
 
 ```json
 {
@@ -120,15 +120,15 @@ Accept: application/json
 }
 ```
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
-- Service: [`service.py`](service.py) — reglas en `_DISEASE_RULES`
+- Service: [`service.py`](service.py) — rules in `_DISEASE_RULES`
 - Schema: [`schema.py`](schema.py)
-- Composición: depende de `domain/weather`
+- Composition: depends on `domain/weather`
 
-### Agregar una enfermedad
+### Adding a disease
 
-1. Agregar entrada a `_DISEASE_RULES` en `service.py` (umbrales T°, RH, días lluviosos).
-2. Ampliar el `Literal` `DiseaseName` en `schema.py`.
-3. Listo — el endpoint la sirve sin tocar nada más.
+1. Add an entry to `_DISEASE_RULES` in `service.py` (T°, RH and rainy-day thresholds).
+2. Extend the `Literal` `DiseaseName` in `schema.py`.
+3. Done — the endpoint serves it without any other changes.

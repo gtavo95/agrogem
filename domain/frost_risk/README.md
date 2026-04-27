@@ -1,10 +1,10 @@
-# `/frost-risk` — Riesgo de helada 7 días
+# `/frost-risk` — 7-day frost risk
 
-Tier 🟢 1 · Derivado de `/weather` + `/elevation` · Sin cache propio (reusa el de weather/elevation).
+Tier 🟢 1 · Derived from `/weather` + `/elevation` · No own cache (reuses weather/elevation cache).
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
-Combina el forecast horario con corrección por elevación (`-6.5 °C/km`). Especialmente relevante para Sierra andina y altiplanos.
+Combines the hourly forecast with elevation correction (`-6.5 °C/km`). Especially relevant for Andean highlands and high plateaus.
 
 ## Endpoint
 
@@ -14,10 +14,10 @@ GET /frost-risk?lat=<float>&lon=<float>
 
 ## Input
 
-| Parámetro | Tipo  | Requerido | Rango          | Descripción | Ejemplo  |
-| --------- | ----- | --------- | -------------- | ----------- | -------- |
-| `lat`     | float | sí        | `[-90, 90]`    | Latitud     | `-0.6`   |
-| `lon`     | float | sí        | `[-180, 180]`  | Longitud    | `-78.5`  |
+| Parameter | Type  | Required | Range          | Description | Example  |
+| --------- | ----- | -------- | -------------- | ----------- | -------- |
+| `lat`     | float | yes      | `[-90, 90]`    | Latitude    | `-0.6`   |
+| `lon`     | float | yes      | `[-180, 180]`  | Longitude   | `-78.5`  |
 
 ### Request
 
@@ -56,27 +56,27 @@ Accept: application/json
 }
 ```
 
-### Campos
+### Fields
 
-| Campo                              | Tipo        | Descripción                                       |
+| Field                              | Type        | Description                                       |
 | ---------------------------------- | ----------- | ------------------------------------------------- |
-| `elevation_m`                      | float (m)   | Elevación usada para la corrección                |
-| `risk_score`                       | float       | Índice 0.0–1.0                                    |
+| `elevation_m`                      | float (m)   | Elevation used for the correction                 |
+| `risk_score`                       | float       | Index 0.0–1.0                                     |
 | `risk_level`                       | enum        | `low` / `moderate` / `high` / `very_high`         |
-| `factors.window_days`              | int         | Días del forecast evaluado                        |
-| `factors.min_temp_c`               | float (°C)  | Temperatura mínima forecast                       |
-| `factors.frost_hours`              | int         | Horas con T° < 0 °C                               |
-| `factors.freezing_probability_pct` | float (%)   | Probabilidad de helada                            |
-| `factors.altitude_correction_c`    | float (°C)  | Corrección aplicada                               |
-| `factors.rule_notes`               | string[]    | Factores detectados, en español                   |
-| `interpretation`                   | string      | Resumen para Gemma                                |
+| `factors.window_days`              | int         | Days evaluated                                    |
+| `factors.min_temp_c`               | float (°C)  | Forecast minimum temperature                      |
+| `factors.frost_hours`              | int         | Hours below 0 °C                                  |
+| `factors.freezing_probability_pct` | float (%)   | Frost probability                                 |
+| `factors.altitude_correction_c`    | float (°C)  | Correction applied                                |
+| `factors.rule_notes`               | string[]    | Detected factors, in Spanish                      |
+| `interpretation`                   | string      | Spanish summary for Gemma                         |
 
-### Errores
+### Errors
 
-| Status | Causa                                              |
+| Status | Cause                                              |
 | ------ | -------------------------------------------------- |
-| 422    | `lat`/`lon` fuera de rango                         |
-| 502    | Weather/elevation provider caído                   |
+| 422    | `lat`/`lon` out of range                           |
+| 502    | Weather/elevation provider down                    |
 
 ## Tool definition (function calling)
 
@@ -95,9 +95,9 @@ Accept: application/json
 }
 ```
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
 - Service: [`service.py`](service.py)
 - Schema: [`schema.py`](schema.py)
-- Composición: depende de `domain/weather` + `domain/elevation`
+- Composition: depends on `domain/weather` + `domain/elevation`

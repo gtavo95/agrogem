@@ -1,10 +1,10 @@
-# `/harvest-window` — Ventana óptima de cosecha 7 días
+# `/harvest-window` — 7-day optimal harvest window
 
-Tier 🟡 3 · Derivado de `/weather` · Sin cache propio (reusa el de weather, 15 min).
+Tier 🟡 3 · Derived from `/weather` · No own cache (reuses weather cache, 15 min).
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
-Evalúa T° media, humedad relativa, lluvia y rachas secas para identificar los mejores días de cosecha (calidad de grano/fruto y secado en campo).
+Evaluates mean temperature, relative humidity, rainfall and dry spells to identify the best harvest days (grain/fruit quality and field drying).
 
 ## Endpoint
 
@@ -14,11 +14,11 @@ GET /harvest-window?lat=<float>&lon=<float>&crop=<enum>
 
 ## Input
 
-| Parámetro | Tipo  | Requerido | Valores                                                                                                                              | Ejemplo    |
-| --------- | ----- | --------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------- |
-| `lat`     | float | sí        | `[-90, 90]`                                                                                                                          | `14.6`     |
-| `lon`     | float | sí        | `[-180, 180]`                                                                                                                        | `-90.5`    |
-| `crop`    | enum  | sí        | `corn` · `rice` · `bean` · `wheat` · `coffee` · `sugarcane` · `banana` · `tomato` · `potato` · `onion` · `broccoli` · `rose` · `strawberry` | `"coffee"` |
+| Parameter | Type  | Required | Values                                                                                                                              | Example    |
+| --------- | ----- | -------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `lat`     | float | yes      | `[-90, 90]`                                                                                                                         | `14.6`     |
+| `lon`     | float | yes      | `[-180, 180]`                                                                                                                       | `-90.5`    |
+| `crop`    | enum  | yes      | `corn` · `rice` · `bean` · `wheat` · `coffee` · `sugarcane` · `banana` · `tomato` · `potato` · `onion` · `broccoli` · `rose` · `strawberry` | `"coffee"` |
 
 ### Request
 
@@ -59,27 +59,27 @@ Accept: application/json
 }
 ```
 
-### Campos
+### Fields
 
-| Campo                       | Tipo            | Descripción                                       |
+| Field                       | Type            | Description                                       |
 | --------------------------- | --------------- | ------------------------------------------------- |
-| `window_score`              | float (0–1)     | Índice (1 = óptimo)                               |
+| `window_score`              | float (0–1)     | Index (1 = optimal)                               |
 | `window_level`              | enum            | `low` / `moderate` / `high` / `very_high`         |
-| `factors.avg_temp_c`        | float \| null   | T° media de la ventana                            |
-| `factors.avg_humidity_pct`  | float \| null   | Humedad relativa media                            |
-| `factors.rainy_days`        | int             | Días con precipitación                            |
-| `factors.dry_spells`        | int             | Días secos consecutivos                           |
-| `factors.rule_notes`        | string[]        | Factores detectados                               |
-| `optimal_dates`             | string[]        | Fechas sugeridas (`YYYY-MM-DD`)                   |
-| `warning`                   | string \| null  | Aviso si las condiciones no son ideales           |
-| `interpretation`            | string          | Resumen para Gemma                                |
+| `factors.avg_temp_c`        | float \| null   | Mean temperature in the window                    |
+| `factors.avg_humidity_pct`  | float \| null   | Mean relative humidity                            |
+| `factors.rainy_days`        | int             | Days with precipitation                           |
+| `factors.dry_spells`        | int             | Consecutive dry days                              |
+| `factors.rule_notes`        | string[]        | Detected factors                                  |
+| `optimal_dates`             | string[]        | Suggested dates (`YYYY-MM-DD`)                    |
+| `warning`                   | string \| null  | Warning if conditions are not ideal               |
+| `interpretation`            | string          | Spanish summary for Gemma                         |
 
-### Errores
+### Errors
 
-| Status | Causa                                              |
+| Status | Cause                                              |
 | ------ | -------------------------------------------------- |
-| 422    | `crop` no reconocido o `lat`/`lon` fuera de rango  |
-| 502    | Weather provider caído                             |
+| 422    | Unrecognized `crop` or `lat`/`lon` out of range    |
+| 502    | Weather provider down                              |
 
 ## Tool definition (function calling)
 
@@ -104,9 +104,9 @@ Accept: application/json
 }
 ```
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
-- Service: [`service.py`](service.py) — reglas en `_HARVEST_RULES`
+- Service: [`service.py`](service.py) — rules in `_HARVEST_RULES`
 - Schema: [`schema.py`](schema.py)
-- Composición: depende de `domain/weather`
+- Composition: depends on `domain/weather`

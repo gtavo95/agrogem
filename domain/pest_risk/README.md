@@ -1,10 +1,10 @@
-# `/pest-risk` — Riesgo de plaga 7 días
+# `/pest-risk` — 7-day pest risk
 
-Tier 🟡 3 · Derivado de `/weather` · Sin cache propio (reusa el de weather, 15 min).
+Tier 🟡 3 · Derived from `/weather` · No own cache (reuses weather cache, 15 min).
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
-A diferencia de las enfermedades fungales, las plagas responden a temperatura (grados-día) e inversa-humedad (spider mite, thrips prosperan en sequedad).
+Unlike fungal diseases, pests respond to temperature (growing-degree days) and inverse humidity (spider mites and thrips thrive in dry conditions).
 
 ## Endpoint
 
@@ -14,11 +14,11 @@ GET /pest-risk?lat=<float>&lon=<float>&pest=<enum>
 
 ## Input
 
-| Parámetro | Tipo  | Requerido | Valores                                                                                                                          | Ejemplo            |
-| --------- | ----- | --------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
-| `lat`     | float | sí        | `[-90, 90]`                                                                                                                      | `14.66`            |
-| `lon`     | float | sí        | `[-180, 180]`                                                                                                                    | `-90.82`           |
-| `pest`    | enum  | sí        | `spider_mite` · `whitefly` · `broad_mite` · `white_grub` · `thrips` · `leafminer` · `fall_armyworm` · `root_knot_nematode` · `coffee_berry_borer` | `"fall_armyworm"`  |
+| Parameter | Type  | Required | Values                                                                                                                                                  | Example            |
+| --------- | ----- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------ |
+| `lat`     | float | yes      | `[-90, 90]`                                                                                                                                             | `14.66`            |
+| `lon`     | float | yes      | `[-180, 180]`                                                                                                                                           | `-90.82`           |
+| `pest`    | enum  | yes      | `spider_mite` · `whitefly` · `broad_mite` · `white_grub` · `thrips` · `leafminer` · `fall_armyworm` · `root_knot_nematode` · `coffee_berry_borer`       | `"fall_armyworm"`  |
 
 ### Request
 
@@ -60,30 +60,30 @@ Accept: application/json
 }
 ```
 
-### Campos
+### Fields
 
-| Campo                        | Tipo            | Descripción                                                                  |
+| Field                        | Type            | Description                                                                  |
 | ---------------------------- | --------------- | ---------------------------------------------------------------------------- |
-| `pest`                       | enum            | Plaga consultada                                                             |
+| `pest`                       | enum            | Queried pest                                                                 |
 | `pest_type`                  | enum            | `mite` / `insect` / `nematode`                                               |
 | `life_stage_risk`            | enum            | `larva` / `adult` / `both`                                                   |
-| `affected_crops`             | string[]        | Cultivos sensibles a esta plaga                                              |
-| `risk_score`                 | float (0–1)     | Índice compuesto                                                             |
+| `affected_crops`             | string[]        | Crops susceptible to this pest                                               |
+| `risk_score`                 | float (0–1)     | Composite index                                                              |
 | `risk_level`                 | enum            | `low` / `moderate` / `high` / `very_high`                                    |
-| `factors.window_days`        | int             | Días evaluados                                                               |
-| `factors.avg_temp_c`         | float \| null   | T° media horaria de la ventana                                               |
-| `factors.avg_humidity_pct`   | float \| null   | Humedad relativa media                                                       |
-| `factors.rainy_days`         | int             | Días con precipitación ≥ 1 mm                                                |
-| `factors.rule_notes`         | string[]        | Condiciones favorables detectadas                                            |
-| `virus_coalert`              | string \| null  | Alerta de virus asociado (ej: BGMV en frijol cuando hay whitefly alto)       |
-| `interpretation`             | string          | Resumen en español listo para Gemma                                          |
+| `factors.window_days`        | int             | Days evaluated                                                               |
+| `factors.avg_temp_c`         | float \| null   | Mean hourly temperature in the window                                        |
+| `factors.avg_humidity_pct`   | float \| null   | Mean relative humidity                                                       |
+| `factors.rainy_days`         | int             | Days with precipitation ≥ 1 mm                                               |
+| `factors.rule_notes`         | string[]        | Detected favorable conditions                                                |
+| `virus_coalert`              | string \| null  | Associated virus alert (e.g. BGMV in beans when whitefly risk is high)       |
+| `interpretation`             | string          | Spanish summary ready for Gemma                                              |
 
-### Errores
+### Errors
 
-| Status | Causa                                              |
+| Status | Cause                                              |
 | ------ | -------------------------------------------------- |
-| 422    | `pest` no reconocida o `lat`/`lon` fuera de rango  |
-| 502    | Weather provider caído                             |
+| 422    | Unrecognized `pest` or `lat`/`lon` out of range    |
+| 502    | Weather provider down                              |
 
 ## Tool definition (function calling)
 
@@ -108,9 +108,9 @@ Accept: application/json
 }
 ```
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
-- Service: [`service.py`](service.py) — reglas en `_PEST_RULES`
+- Service: [`service.py`](service.py) — rules in `_PEST_RULES`
 - Schema: [`schema.py`](schema.py)
-- Composición: depende de `domain/weather`
+- Composition: depends on `domain/weather`

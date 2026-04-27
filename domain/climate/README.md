@@ -1,10 +1,10 @@
-# `/climate/history` — Histórico climático desde 1981
+# `/climate/history` — Climate history since 1981
 
-Tier 🟠 4 · Fuente: [NASA POWER](https://power.larc.nasa.gov/) (community `AG`) · Cache Redis 7 días.
+Tier 🟠 4 · Source: [NASA POWER](https://power.larc.nasa.gov/) (community `AG`) · Redis cache 7 days.
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
-Para preguntas tipo *"¿llovió más este año que el promedio?"*, *"¿este año es más cálido que lo normal?"*. Datos globales desde 1981.
+For questions like *"did it rain more this year than the average?"* or *"is this year warmer than usual?"*. Global data since 1981.
 
 ## Endpoint
 
@@ -14,13 +14,13 @@ GET /climate/history?lat=<float>&lon=<float>&start=<YYYY-MM-DD>&end=<YYYY-MM-DD>
 
 ## Input
 
-| Parámetro     | Tipo   | Requerido | Descripción                                                          | Ejemplo        |
-| ------------- | ------ | --------- | -------------------------------------------------------------------- | -------------- |
-| `lat`         | float  | sí        | `[-90, 90]`                                                          | `14.5586`      |
-| `lon`         | float  | sí        | `[-180, 180]`                                                        | `-90.7295`     |
-| `start`       | string | sí        | Fecha inicial `YYYY-MM-DD`                                           | `"2020-01-01"` |
-| `end`         | string | sí        | Fecha final `YYYY-MM-DD` (debe ser ≥ `start`)                        | `"2023-12-31"` |
-| `granularity` | enum   | no        | `monthly` (default, recomendado) o `daily` (máx. 366 días por call)  | `"monthly"`    |
+| Parameter     | Type   | Required | Description                                                          | Example        |
+| ------------- | ------ | -------- | -------------------------------------------------------------------- | -------------- |
+| `lat`         | float  | yes      | `[-90, 90]`                                                          | `14.5586`      |
+| `lon`         | float  | yes      | `[-180, 180]`                                                        | `-90.7295`     |
+| `start`       | string | yes      | Start date `YYYY-MM-DD`                                              | `"2020-01-01"` |
+| `end`         | string | yes      | End date `YYYY-MM-DD` (must be ≥ `start`)                            | `"2023-12-31"` |
+| `granularity` | enum   | no       | `monthly` (default, recommended) or `daily` (max. 366 days per call) | `"monthly"`    |
 
 ### Request
 
@@ -68,31 +68,31 @@ Accept: application/json
 }
 ```
 
-### Campos
+### Fields
 
-| Campo                       | Tipo                | Descripción                                                                |
+| Field                       | Type                | Description                                                                |
 | --------------------------- | ------------------- | -------------------------------------------------------------------------- |
-| `granularity`               | enum                | Granularidad eco                                                           |
-| `start`, `end`              | string              | Rango eco                                                                  |
-| `series[]`                  | array               | Serie temporal                                                             |
-| `series[].date`             | string              | `YYYY-MM-DD` (daily) o `YYYY-MM` (monthly)                                 |
-| `series[].t2m`              | float \| null (°C)  | T° media a 2 m                                                             |
-| `series[].t2m_max`          | float \| null (°C)  | T° máxima a 2 m                                                            |
-| `series[].t2m_min`          | float \| null (°C)  | T° mínima a 2 m                                                            |
-| `series[].precipitation_mm` | float \| null (mm)  | Precipitación                                                              |
-| `series[].rh_pct`           | float \| null (%)   | Humedad relativa a 2 m                                                     |
-| `series[].solar_mj_m2`      | float \| null       | Radiación solar (MJ/m²/día en daily, MJ/m²/mes en monthly)                 |
-| `interpretation`            | string              | Resumen agregado en español (T° media, precipitación total, periodo más lluvioso) |
+| `granularity`               | enum                | Echoed granularity                                                         |
+| `start`, `end`              | string              | Echoed range                                                               |
+| `series[]`                  | array               | Time series                                                                |
+| `series[].date`             | string              | `YYYY-MM-DD` (daily) or `YYYY-MM` (monthly)                                |
+| `series[].t2m`              | float \| null (°C)  | Mean temperature at 2 m                                                    |
+| `series[].t2m_max`          | float \| null (°C)  | Max temperature at 2 m                                                     |
+| `series[].t2m_min`          | float \| null (°C)  | Min temperature at 2 m                                                     |
+| `series[].precipitation_mm` | float \| null (mm)  | Precipitation                                                              |
+| `series[].rh_pct`           | float \| null (%)   | Relative humidity at 2 m                                                   |
+| `series[].solar_mj_m2`      | float \| null       | Solar radiation (MJ/m²/day in daily, MJ/m²/month in monthly)               |
+| `interpretation`            | string              | Spanish aggregated summary (mean T°, total rainfall, wettest period)       |
 
-> Los `null` aparecen cuando POWER no tiene dato en ese punto (sentinela `-999` ya filtrado).
+> `null` values appear when POWER has no data at that point (the `-999` sentinel is already filtered).
 
-### Errores
+### Errors
 
-| Status | Causa                                              |
-| ------ | -------------------------------------------------- |
-| 422    | Fechas mal formadas, `end < start`, o rango > 366 días en `daily` |
-| 404    | Sin datos para los parámetros                      |
-| 502    | NASA POWER caído o timeout                         |
+| Status | Cause                                                |
+| ------ | ---------------------------------------------------- |
+| 422    | Malformed dates, `end < start`, or range > 366 days in `daily` |
+| 404    | No data for those parameters                         |
+| 502    | NASA POWER down or timed out                         |
 
 ## Tool definition (function calling)
 
@@ -118,10 +118,10 @@ Accept: application/json
 }
 ```
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
 - Service: [`service.py`](service.py)
 - Schema: [`schema.py`](schema.py)
-- Provider HTTP: [`providers/nasapower/climate_provider.py`](../../providers/nasapower/climate_provider.py)
-- Cache Redis: [`providers/redis/climate_cache.py`](../../providers/redis/climate_cache.py)
+- HTTP provider: [`providers/nasapower/climate_provider.py`](../../providers/nasapower/climate_provider.py)
+- Redis cache: [`providers/redis/climate_cache.py`](../../providers/redis/climate_cache.py)

@@ -1,8 +1,8 @@
-# `/weather` — Clima actual + forecast 7 días
+# `/weather` — Current weather + 7-day forecast
 
-Tier 🟢 1 · Fuente: [Open-Meteo](https://open-meteo.com/) · Cache Redis 15 min · Sin API key.
+Tier 🟢 1 · Source: [Open-Meteo](https://open-meteo.com/) · Redis cache 15 min · No API key.
 
-← [Volver al README principal](../../README.md)
+← [Back to main README](../../README.md)
 
 ## Endpoint
 
@@ -12,10 +12,10 @@ GET /weather?lat=<float>&lon=<float>
 
 ## Input
 
-| Parámetro | Tipo  | Requerido | Rango          | Descripción | Ejemplo  |
-| --------- | ----- | --------- | -------------- | ----------- | -------- |
-| `lat`     | float | sí        | `[-90, 90]`    | Latitud     | `14.76`  |
-| `lon`     | float | sí        | `[-180, 180]`  | Longitud    | `-90.99` |
+| Parameter | Type  | Required | Range          | Description | Example  |
+| --------- | ----- | -------- | -------------- | ----------- | -------- |
+| `lat`     | float | yes      | `[-90, 90]`    | Latitude    | `14.76`  |
+| `lon`     | float | yes      | `[-180, 180]`  | Longitude   | `-90.99` |
 
 ### Request
 
@@ -63,28 +63,28 @@ Accept: application/json
 }
 ```
 
-### Campos
+### Fields
 
-| Campo                                 | Tipo            | Descripción                                  |
+| Field                                 | Type            | Description                                  |
 | ------------------------------------- | --------------- | -------------------------------------------- |
-| `current.temperature_2m`              | float (°C)      | Temperatura a 2 m                            |
-| `current.relative_humidity_2m`        | int (%)         | Humedad relativa                             |
-| `current.precipitation`               | float (mm)      | Precipitación última hora                    |
-| `current.weather_code`                | int             | Código WMO de condición                      |
-| `current.wind_speed_10m`              | float (km/h)    | Viento a 10 m                                |
-| `hourly.*`                            | array (168)     | Forecast horario 7 días                      |
-| `daily.temperature_2m_max/min`        | array (7) °C    | T° max/min diaria                            |
-| `daily.precipitation_sum`             | array (7) mm    | Lluvia diaria total                          |
-| `daily.et0_fao_evapotranspiration`    | array (7) mm    | ET₀ FAO — clave para riesgo de riego         |
-| `daily.uv_index_max`                  | array (7)       | UV máximo diario                             |
-| `interpretation`                      | string          | Resumen en español listo para Gemma          |
+| `current.temperature_2m`              | float (°C)      | Temperature at 2 m                           |
+| `current.relative_humidity_2m`        | int (%)         | Relative humidity                            |
+| `current.precipitation`               | float (mm)      | Last-hour precipitation                      |
+| `current.weather_code`                | int             | WMO weather code                             |
+| `current.wind_speed_10m`              | float (km/h)    | Wind at 10 m                                 |
+| `hourly.*`                            | array (168)     | Hourly forecast for 7 days                   |
+| `daily.temperature_2m_max/min`        | array (7) °C    | Daily max/min temperature                    |
+| `daily.precipitation_sum`             | array (7) mm    | Daily total rainfall                         |
+| `daily.et0_fao_evapotranspiration`    | array (7) mm    | FAO ET₀ — key input for irrigation risk      |
+| `daily.uv_index_max`                  | array (7)       | Daily max UV index                           |
+| `interpretation`                      | string          | Spanish summary ready for Gemma              |
 
-### Errores
+### Errors
 
-| Status | Causa                                              |
+| Status | Cause                                              |
 | ------ | -------------------------------------------------- |
-| 422    | `lat`/`lon` faltante o fuera de rango              |
-| 502    | Open-Meteo caído o timeout                         |
+| 422    | `lat`/`lon` missing or out of range                |
+| 502    | Open-Meteo down or timed out                       |
 
 ## Tool definition (function calling)
 
@@ -103,10 +103,10 @@ Accept: application/json
 }
 ```
 
-## Implementación
+## Implementation
 
 - Router: [`router.py`](router.py)
 - Service: [`service.py`](service.py)
 - Schema: [`schema.py`](schema.py)
-- Provider HTTP: [`providers/openmeteo/weather_provider.py`](../../providers/openmeteo/weather_provider.py)
-- Cache Redis: [`providers/redis/weather_cache.py`](../../providers/redis/weather_cache.py)
+- HTTP provider: [`providers/openmeteo/weather_provider.py`](../../providers/openmeteo/weather_provider.py)
+- Redis cache: [`providers/redis/weather_cache.py`](../../providers/redis/weather_cache.py)

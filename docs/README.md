@@ -1,97 +1,97 @@
 # Agrogem API
 
-Backend para una app móvil. FastAPI + MongoDB + Redis, con autenticación simple basada en teléfono + password y sesiones de chat con TTL.
+Backend for a mobile app. FastAPI + MongoDB + Redis, with simple phone + password authentication and chat sessions with TTL.
 
 ## Stack
 
 - **FastAPI** (async)
-- **MongoDB** vía [motor](https://motor.readthedocs.io/) — persistencia de usuarios y conversaciones
-- **Redis** vía [redis-py](https://redis.readthedocs.io/) — sesiones de chat con TTL y cache de clima
-- **bcrypt** para hashing de passwords
-- **GCP Secret Manager** para secretos en prod (con fallback a `.env` en dev)
-- **Docker** para deploy (Cloud Run)
+- **MongoDB** via [motor](https://motor.readthedocs.io/) — persistence for users and conversations
+- **Redis** via [redis-py](https://redis.readthedocs.io/) — chat sessions with TTL and weather cache
+- **bcrypt** for password hashing
+- **GCP Secret Manager** for secrets in prod (with `.env` fallback in dev)
+- **Docker** for deployment (Cloud Run)
 
-## Arquitectura
+## Architecture
 
-El proyecto sigue **ports & adapters** (hexagonal):
+The project follows **ports & adapters** (hexagonal):
 
-- **`domain/<x>/`** es el core de negocio. No importa nada de `providers/`.
-  - `schema.py`: entidades y DTOs (Pydantic).
-  - `repository.py`: el **puerto** — un `Protocol` que define el contrato de persistencia.
-  - `service.py`: lógica de aplicación. Recibe el puerto por parámetro, nunca conoce al adapter.
-  - `router.py`: adapter de entrada (FastAPI). Compone el caso de uso inyectando el repo vía `Depends`.
-- **`providers/<infra>/`** son los **adapters** de infraestructura. Cada uno implementa uno o más puertos del dominio.
-  - `config.py`: cliente + helpers de conexión.
-  - `dependencies.py`: factories `get_*_repository` que FastAPI inyecta en los routers.
-  - `*_repository.py`: implementación concreta del puerto.
+- **`domain/<x>/`** is the business core. It does not import anything from `providers/`.
+  - `schema.py`: entities and DTOs (Pydantic).
+  - `repository.py`: the **port** — a `Protocol` defining the persistence contract.
+  - `service.py`: application logic. Receives the port as a parameter; never knows about the adapter.
+  - `router.py`: input adapter (FastAPI). Wires the use case by injecting the repo via `Depends`.
+- **`providers/<infra>/`** are the infrastructure **adapters**. Each one implements one or more domain ports.
+  - `config.py`: client + connection helpers.
+  - `dependencies.py`: `get_*_repository` factories that FastAPI injects into the routers.
+  - `*_repository.py`: concrete implementation of the port.
 
-Regla de dependencia: **`domain/` no importa `providers/`**; `providers/` sí importa `domain/` para implementar sus puertos.
+Dependency rule: **`domain/` does not import `providers/`**; `providers/` does import `domain/` to implement its ports.
 
-## Estructura
+## Layout
 
 ```
 .
 ├── auth/
 │   └── secrets.py                  # GCP Secret Manager loader
-├── domain/                         # Core de negocio (hexagonal: adentro)
+├── domain/                         # Business core (hexagonal: inside)
 │   ├── user/
-│   │   ├── schema.py               # Entidad User + DTOs
-│   │   ├── repository.py           # Puerto: UserRepository (Protocol)
-│   │   ├── service.py              # Casos de uso (register, authenticate)
-│   │   └── router.py               # Adapter HTTP
-│   ├── session/                    # Sesiones de chat con TTL
-│   ├── chat/                       # Conversaciones y mensajes
-│   ├── weather/                    # Clima (con puertos provider + cache)
-│   ├── gbif/                       # Ocurrencias de especies (GBIF)
-│   ├── geocoding/                  # Direcciones ↔ coordenadas (con puertos provider + cache)
-│   ├── soil/                       # Perfil de suelo (SoilGrids, con puertos provider + cache)
-│   ├── elevation/                  # Altitud (Open-Meteo, con puertos provider + cache)
-│   ├── climate/                    # Histórico climático (NASA POWER, con puertos provider + cache)
-│   └── disease_risk/               # Tool derivado: riesgo de enfermedad (reusa WeatherProvider)
-├── providers/                      # Adapters de infraestructura (hexagonal: afuera)
+│   │   ├── schema.py               # User entity + DTOs
+│   │   ├── repository.py           # Port: UserRepository (Protocol)
+│   │   ├── service.py              # Use cases (register, authenticate)
+│   │   └── router.py               # HTTP adapter
+│   ├── session/                    # Chat sessions with TTL
+│   ├── chat/                       # Conversations and messages
+│   ├── weather/                    # Weather (with provider + cache ports)
+│   ├── gbif/                       # Species occurrences (GBIF)
+│   ├── geocoding/                  # Addresses ↔ coordinates (with provider + cache ports)
+│   ├── soil/                       # Soil profile (SoilGrids, with provider + cache ports)
+│   ├── elevation/                  # Altitude (Open-Meteo, with provider + cache ports)
+│   ├── climate/                    # Climate history (NASA POWER, with provider + cache ports)
+│   └── disease_risk/               # Derived tool: disease risk (reuses WeatherProvider)
+├── providers/                      # Infrastructure adapters (hexagonal: outside)
 │   ├── mongo/
-│   │   ├── config.py               # Cliente Motor + get_mongo dependency
+│   │   ├── config.py               # Motor client + get_mongo dependency
 │   │   ├── dependencies.py         # get_chat_repository, get_user_repository
-│   │   ├── chat_repository.py      # MongoChatRepository (implementa ChatRepository)
-│   │   └── user_repository.py      # MongoUserRepository (implementa UserRepository)
+│   │   ├── chat_repository.py      # MongoChatRepository (implements ChatRepository)
+│   │   └── user_repository.py     # MongoUserRepository (implements UserRepository)
 │   ├── redis/
-│   │   ├── config.py               # Cliente async + get_redis dependency
+│   │   ├── config.py               # Async client + get_redis dependency
 │   │   ├── dependencies.py         # get_session_repository
-│   │   ├── session_repository.py   # RedisSessionRepository (implementa SessionRepository)
-│   │   ├── weather_cache.py        # RedisWeatherCache (implementa WeatherCache)
-│   │   ├── geocoding_cache.py      # RedisGeocodingCache (implementa GeocodingCache)
-│   │   ├── soil_cache.py           # RedisSoilCache (implementa SoilCache)
-│   │   ├── elevation_cache.py      # RedisElevationCache (implementa ElevationCache)
-│   │   └── climate_cache.py        # RedisClimateHistoryCache (implementa ClimateHistoryCache)
+│   │   ├── session_repository.py   # RedisSessionRepository (implements SessionRepository)
+│   │   ├── weather_cache.py        # RedisWeatherCache (implements WeatherCache)
+│   │   ├── geocoding_cache.py      # RedisGeocodingCache (implements GeocodingCache)
+│   │   ├── soil_cache.py           # RedisSoilCache (implements SoilCache)
+│   │   ├── elevation_cache.py      # RedisElevationCache (implements ElevationCache)
+│   │   └── climate_cache.py        # RedisClimateHistoryCache (implements ClimateHistoryCache)
 │   ├── openmeteo/
-│   │   ├── weather_provider.py     # Adapter HTTP para WeatherProvider
-│   │   └── elevation_provider.py   # Adapter HTTP para ElevationProvider
+│   │   ├── weather_provider.py     # HTTP adapter for WeatherProvider
+│   │   └── elevation_provider.py   # HTTP adapter for ElevationProvider
 │   ├── nominatim/
-│   │   └── geocoding_provider.py   # Adapter HTTP (OSM) para GeocodingProvider
+│   │   └── geocoding_provider.py   # HTTP adapter (OSM) for GeocodingProvider
 │   ├── soilgrids/
-│   │   └── soil_provider.py        # Adapter HTTP (ISRIC) para SoilProvider
+│   │   └── soil_provider.py        # HTTP adapter (ISRIC) for SoilProvider
 │   └── nasapower/
-│       └── climate_provider.py     # Adapter HTTP (NASA POWER) para ClimateHistoryProvider
-├── .http/                          # Requests de ejemplo (un archivo por dominio)
-├── config.py                       # Lifespan: carga secretos, abre/cierra clientes
-├── main.py                         # App FastAPI + registro de routers
+│       └── climate_provider.py     # HTTP adapter (NASA POWER) for ClimateHistoryProvider
+├── .http/                          # Sample requests (one file per domain)
+├── config.py                       # Lifespan: load secrets, open/close clients
+├── main.py                         # FastAPI app + router registration
 ├── Dockerfile
 └── requirements.txt
 ```
 
-### Agregar un dominio nuevo
+### Adding a new domain
 
-1. Crea `domain/<nombre>/` con `schema.py`, `repository.py` (el puerto), `service.py`, `router.py`.
-2. Implementa el puerto como adapter en `providers/<infra>/<nombre>_repository.py`.
-3. Expone la factory en `providers/<infra>/dependencies.py` y úsala en el router con `Depends`.
-4. Incluye el router en `main.py`.
-5. Añade `.http/<nombre>.http`.
+1. Create `domain/<name>/` with `schema.py`, `repository.py` (the port), `service.py`, `router.py`.
+2. Implement the port as an adapter in `providers/<infra>/<name>_repository.py`.
+3. Expose the factory in `providers/<infra>/dependencies.py` and use it in the router with `Depends`.
+4. Include the router in `main.py`.
+5. Add `.http/<name>.http`.
 
-### Cambiar el adapter (p.ej. Redis → Memcached)
+### Swapping the adapter (e.g. Redis → Memcached)
 
-1. Crea `providers/memcached/session_repository.py` que implemente `SessionRepository`.
-2. Expón `get_session_repository` en `providers/memcached/dependencies.py`.
-3. Cambia el import en los routers. El `domain/` no se toca.
+1. Create `providers/memcached/session_repository.py` that implements `SessionRepository`.
+2. Expose `get_session_repository` in `providers/memcached/dependencies.py`.
+3. Change the import in the routers. `domain/` is untouched.
 
 ## Setup
 
@@ -101,134 +101,138 @@ source .venv/bin/activate
 pip install -r requirements.txt
 
 cp .env.example .env
-# edita .env: GOOGLE_CLOUD_PROJECT, MODE (DEV|PROD), y opcionalmente MONGODB_URI, REDIS_URI
+# edit .env: GOOGLE_CLOUD_PROJECT, MODE (DEV|PROD), and optionally MONGODB_URI, REDIS_URI
 ```
 
-Si usas GCP Secret Manager:
+If you use GCP Secret Manager:
 
 ```bash
 gcloud auth application-default login
 ```
 
-## Correr en local
+## Run locally
 
 ```bash
 fastapi dev main.py
 ```
 
 - API: http://127.0.0.1:8000
-- Docs interactivas: http://127.0.0.1:8000/docs
+- Interactive docs: http://127.0.0.1:8000/docs
 
 ## Endpoints
 
-| Método | Ruta                       | Descripción                                                      |
-| ------ | -------------------------- | ---------------------------------------------------------------- |
-| POST   | `/users/register`          | Crea un usuario nuevo                                            |
-| POST   | `/sessions`                | Abre una sesión de chat (Redis, TTL 24h)                         |
-| GET    | `/sessions/{id}`           | Obtiene una sesión activa                                        |
-| PATCH  | `/sessions/{id}/state`     | Fusiona claves en el estado de la sesión                         |
-| DELETE | `/sessions/{id}`           | Cierra y elimina la sesión                                       |
-| POST   | `/chat/messages`           | Envía un mensaje en una sesión activa (persistido en Mongo)      |
-| GET    | `/chat/conversations`      | Lista conversaciones, opcional `?user_phone=`                    |
-| GET    | `/weather?lat=&lon=`       | Clima actual + pronóstico 7d (Open-Meteo, cache Redis 15min)     |
-| GET    | `/gbif/species`            | Ocurrencias de una especie en un país (GBIF, cache Redis 24h)    |
-| GET    | `/geocode?q=&country=`     | Forward geocoding: texto → lat/lon (Nominatim, cache Redis 30d)  |
-| GET    | `/geocode/reverse?lat=&lon=` | Reverse geocoding: lat/lon → municipio/estado/país (Nominatim) |
-| GET    | `/soil?lat=&lon=`          | Perfil de suelo 0-30 cm (ISRIC SoilGrids, cache Redis 90d)       |
-| POST   | `/pest/upload-url`         | Signed URL (v4, ~15 min) para subir la foto del usuario a GCS    |
-| POST   | `/pest/identify`           | kNN ponderado sobre `pest_embeddings` (Atlas `$vectorSearch`)    |
-| GET    | `/elevation?lat=&lon=`     | Altitud en m.s.n.m (Open-Meteo Elevation, cache Redis 365d)      |
-| GET    | `/climate/history?lat=&lon=&start=&end=&granularity=` | Histórico climático desde 1981 (NASA POWER AG, cache Redis 7d) |
-| GET    | `/disease-risk?lat=&lon=&disease=` | Índice de riesgo 7d para `coffee_rust` / `late_blight` / `corn_rust` (derivado de `/weather`) |
+| Method | Route                       | Description                                                       |
+| ------ | --------------------------- | ----------------------------------------------------------------- |
+| POST   | `/users/register`           | Create a new user                                                 |
+| POST   | `/sessions`                 | Open a chat session (Redis, TTL 24h)                              |
+| GET    | `/sessions/{id}`            | Get an active session                                             |
+| PATCH  | `/sessions/{id}/state`      | Merge keys into the session state                                 |
+| DELETE | `/sessions/{id}`            | Close and delete the session                                      |
+| POST   | `/chat/messages`            | Send a message in an active session (persisted in Mongo)          |
+| GET    | `/chat/conversations`       | List conversations, optional `?user_phone=`                       |
+| GET    | `/weather?lat=&lon=`        | Current weather + 7d forecast (Open-Meteo, Redis 15min cache)     |
+| GET    | `/gbif/species`             | Occurrences of a species in a country (GBIF, Redis 24h cache)     |
+| GET    | `/geocode?q=&country=`      | Forward geocoding: text → lat/lon (Nominatim, Redis 30d cache)    |
+| GET    | `/geocode/reverse?lat=&lon=`| Reverse geocoding: lat/lon → municipality/state/country           |
+| GET    | `/soil?lat=&lon=`           | Soil profile 0-30 cm (ISRIC SoilGrids, Redis 90d cache)           |
+| POST   | `/pest/upload-url`          | Signed URL (v4, ~15 min) to upload the user's photo to GCS        |
+| POST   | `/pest/identify`            | Weighted kNN over `pest_embeddings` (Atlas `$vectorSearch`)       |
+| GET    | `/elevation?lat=&lon=`      | Altitude in m a.s.l. (Open-Meteo Elevation, Redis 365d cache)     |
+| GET    | `/climate/history?lat=&lon=&start=&end=&granularity=` | Climate history since 1981 (NASA POWER AG, Redis 7d cache) |
+| GET    | `/disease-risk?lat=&lon=&disease=` | 7d disease risk index (~50 diseases, derived from `/weather`) |
+| GET    | `/pest-risk?lat=&lon=&pest=` | 7d pest risk index (derived from `/weather`)                    |
+| GET    | `/frost-risk?lat=&lon=`     | 7d frost risk index (derived from `/weather` + `/elevation`)      |
+| GET    | `/irrigation-risk?lat=&lon=&crop=` | 7d water-stress risk + irrigation recommendation in mm     |
+| GET    | `/harvest-window?lat=&lon=&crop=` | 7d optimal harvest-window index                             |
 
-Ejemplos de uso en `.http/`. Si usas VS Code, instala la extensión **REST Client** para ejecutarlos directo desde el editor.
+Sample requests in `.http/`. If you use VS Code, install the **REST Client** extension to run them straight from the editor.
 
 ### Weather (`/weather`)
 
-Proxy a [Open-Meteo](https://open-meteo.com/) con cache en Redis (TTL 15 min por coordenada, key `weather:{lat}:{lon}`). No requiere API key.
+Proxy to [Open-Meteo](https://open-meteo.com/) with Redis cache (TTL 15 min per coordinate, key `weather:{lat}:{lon}`). No API key required.
 
 **Query params**
 
-| Param | Tipo  | Rango         |
+| Param | Type  | Range         |
 | ----- | ----- | ------------- |
 | `lat` | float | `[-90, 90]`   |
 | `lon` | float | `[-180, 180]` |
 
-**Respuesta** incluye, en una sola llamada:
+**Response** includes, in a single call:
 
-- `current`: temperatura, humedad relativa, precipitación, viento, weather code
-- `hourly` (7 días): temperatura, humedad relativa, probabilidad de precipitación
-- `daily` (7 días): T° max/min, precipitación total, **ET₀ (evapotranspiración FAO)**, **UV max**
+- `current`: temperature, relative humidity, precipitation, wind, weather code
+- `hourly` (7 days): temperature, relative humidity, precipitation probability
+- `daily` (7 days): T° max/min, total precipitation, **ET₀ (FAO evapotranspiration)**, **max UV**
 
-**Arquitectura hexagonal** — los puertos viven en `domain/weather/` y los adapters en `providers/`:
+**Hexagonal architecture** — ports live in `domain/weather/` and adapters in `providers/`:
 
 ```
 domain/weather/
-├── schema.py          # Modelos Pydantic
-├── provider.py        # Port: WeatherProvider (contrato de fuente externa)
-├── cache.py           # Port: WeatherCache (contrato de cache)
-├── service.py         # fetch_weather(provider, cache, lat, lon) — lógica pura
-└── router.py          # DI: conecta adapters concretos a los ports
+├── schema.py          # Pydantic models
+├── provider.py        # Port: WeatherProvider (external-source contract)
+├── cache.py           # Port: WeatherCache (cache contract)
+├── service.py         # fetch_weather(provider, cache, lat, lon) — pure logic
+└── router.py          # DI: wires concrete adapters to the ports
 
 providers/openmeteo/
-└── weather_provider.py   # Adapter HTTP (httpx) para WeatherProvider
+└── weather_provider.py   # HTTP adapter (httpx) for WeatherProvider
 
 providers/redis/
-└── weather_cache.py      # Adapter Redis para WeatherCache
+└── weather_cache.py      # Redis adapter for WeatherCache
 ```
 
-Para cambiar de proveedor (p.ej. NASA POWER), solo añade un nuevo adapter en `providers/` y ajusta `get_weather_provider()` en `domain/weather/router.py`. El dominio queda intacto.
+To switch providers (e.g. to NASA POWER), just add a new adapter under `providers/` and tweak `get_weather_provider()` in `domain/weather/router.py`. The domain stays untouched.
 
 ### Geocoding (`/geocode`, `/geocode/reverse`)
 
-Proxy a [Nominatim](https://nominatim.org/) (OpenStreetMap) con cache en Redis (TTL 30 días). Pensado como **tool del agente**: el LLM traduce "mi parcela en Chimaltenango" a coordenadas antes de llamar a `/weather`, `/gbif`, etc.
+Proxy to [Nominatim](https://nominatim.org/) (OpenStreetMap) with Redis cache (TTL 30 days). Designed as the **agent's tool**: the LLM translates "my plot in Chimaltenango" into coordinates before calling `/weather`, `/gbif`, etc.
 
-**`GET /geocode`** — forward (texto → coords, top-1)
+**`GET /geocode`** — forward (text → coords, top-1)
 
-| Param     | Tipo   | Requerido | Descripción                                           |
-| --------- | ------ | --------- | ----------------------------------------------------- |
-| `q`       | string | sí        | Texto libre. Ej: `"Chimaltenango"`, `"Zapopan, Jal."` |
-| `country` | string | no        | Filtro ISO alpha-2. Ej: `"GT"`, `"MX"`                |
+| Param     | Type   | Required | Description                                            |
+| --------- | ------ | -------- | ------------------------------------------------------ |
+| `q`       | string | yes      | Free-form text. E.g. `"Chimaltenango"`, `"Zapopan, Jal."` |
+| `country` | string | no       | ISO alpha-2 filter. E.g. `"GT"`, `"MX"`                |
 
-Respuestas: `200` con `{ lat, lon, display_name, country_code, state, municipality, type }`, `404` si no hay match, `502` si Nominatim falla.
+Responses: `200` with `{ lat, lon, display_name, country_code, state, municipality, type }`, `404` if no match, `502` if Nominatim fails.
 
-**`GET /geocode/reverse?lat=&lon=`** — reverse (coords → lugar). Rango: `lat ∈ [-90,90]`, `lon ∈ [-180,180]`. Misma forma de respuesta que forward.
+**`GET /geocode/reverse?lat=&lon=`** — reverse (coords → place). Range: `lat ∈ [-90,90]`, `lon ∈ [-180,180]`. Same response shape as forward.
 
-**Notas operativas:**
+**Operational notes:**
 
-- Nominatim público limita a ~1 req/s y exige `User-Agent` identificable (`agrogem/1.0`). El cache agresivo (30 días, keys `geocode:fwd:{country|ANY}:{query}` y `geocode:rev:{lat}:{lon}`) absorbe la mayoría del tráfico.
-- Para volumen alto en producción: self-hostear Nominatim (imagen Docker oficial) o cambiar al adapter de Mapbox / LocationIQ / Google — solo se agrega un nuevo archivo en `providers/` y se ajusta `get_geocoding_provider()`.
+- Public Nominatim limits to ~1 req/s and requires an identifying `User-Agent` (`agrogem/1.0`). The aggressive cache (30 days, keys `geocode:fwd:{country|ANY}:{query}` and `geocode:rev:{lat}:{lon}`) absorbs most of the traffic.
+- For high production volume: self-host Nominatim (official Docker image) or swap to the Mapbox / LocationIQ / Google adapter — just add a new file under `providers/` and tweak `get_geocoding_provider()`.
 
 ### Soil (`/soil`)
 
-Proxy a [ISRIC SoilGrids v2.0](https://www.isric.org/explore/soilgrids) con cache en Redis (TTL 90 días, suelo no cambia). Sin API key.
+Proxy to [ISRIC SoilGrids v2.0](https://www.isric.org/explore/soilgrids) with Redis cache (TTL 90 days, soil doesn't change). No API key.
 
-**`GET /soil?lat=&lon=`** devuelve 3 horizontes de la zona radicular (`0-5`, `5-15`, `15-30` cm), cada uno con:
+**`GET /soil?lat=&lon=`** returns 3 horizons of the root zone (`0-5`, `5-15`, `15-30` cm), each with:
 
-| Campo               | Unidad    | Descripción                                  |
-| ------------------- | --------- | -------------------------------------------- |
-| `ph`                | pH        | pH en H₂O                                    |
-| `soc_g_per_kg`      | g/kg      | Carbono orgánico del suelo (materia orgánica) |
-| `nitrogen_g_per_kg` | g/kg      | Nitrógeno total                              |
-| `clay_pct`          | %         | Arcilla                                      |
-| `sand_pct`          | %         | Arena                                        |
-| `silt_pct`          | %         | Limo                                         |
-| `cec_mmol_per_kg`   | mmol(c)/kg | Capacidad de intercambio catiónico          |
-| `texture_class`     | string    | Clase textural USDA (derivada de sand/silt/clay) |
+| Field               | Unit       | Description                                  |
+| ------------------- | ---------- | -------------------------------------------- |
+| `ph`                | pH         | pH in H₂O                                    |
+| `soc_g_per_kg`      | g/kg       | Soil organic carbon (organic matter)         |
+| `nitrogen_g_per_kg` | g/kg       | Total nitrogen                               |
+| `clay_pct`          | %          | Clay                                         |
+| `sand_pct`          | %          | Sand                                         |
+| `silt_pct`          | %          | Silt                                         |
+| `cec_mmol_per_kg`   | mmol(c)/kg | Cation exchange capacity                     |
+| `texture_class`     | string     | USDA texture class (derived from sand/silt/clay) |
 
-Además, a nivel raíz: `dominant_texture` (textura del horizonte 0-5 cm) e `interpretation` — un resumen en lenguaje natural pensado para que el agente lo consuma directo (p.ej. *"Horizonte superficial (0-5 cm): ligeramente ácido (pH 6.2); materia orgánica moderada (SOC 12.4 g/kg); textura clay loam."*).
+Plus, at the root level: `dominant_texture` (texture of the 0-5 cm horizon) and `interpretation` — a natural-language summary intended to be consumed by the agent directly (e.g. *"Horizonte superficial (0-5 cm): ligeramente ácido (pH 6.2); materia orgánica moderada (SOC 12.4 g/kg); textura clay loam."*).
 
-Respuestas: `200` con el perfil, `404` si no hay cobertura (océano, cuerpos de agua, latitudes extremas), `502` en falla upstream.
+Responses: `200` with the profile, `404` if no coverage (ocean, water bodies, extreme latitudes), `502` on upstream failure.
 
 ### Pest (`/pest`)
 
-Clasificador kNN multimodal pensado para ser consumido como **tool** por el agente de Gemma en el móvil. La predicción on-device se complementa con los vecinos más cercanos en una biblioteca etiquetada (`agrogem.pest_embeddings`, 17 plagas, 768-dim).
+Multimodal kNN classifier intended to be consumed as a **tool** by the on-device Gemma agent. The on-device prediction is augmented with the nearest neighbors in a labeled library (`agrogem.pest_embeddings`, 17 pests, 768-dim).
 
-**Flujo:**
+**Flow:**
 
-1. `POST /pest/upload-url` — el backend responde `{ object_path, signed_url, content_type, expires_in_seconds }`.
-2. Cliente hace `PUT` binario a `signed_url` con el `content_type` indicado. La imagen queda en `queries/<uuid>.jpg`.
-3. `POST /pest/identify` con `{ object_path }` — el backend descarga la imagen de GCS, genera su embedding con `gemini-embedding-2` (output 768), y ejecuta `$vectorSearch` en Atlas. Agrega top-K por **voto ponderado por similitud** y devuelve:
+1. `POST /pest/upload-url` — backend responds with `{ object_path, signed_url, content_type, expires_in_seconds }`.
+2. Client `PUT`s the binary to `signed_url` with the indicated `content_type`. The image lands in `queries/<uuid>.jpg`.
+3. `POST /pest/identify` with `{ object_path }` — backend downloads the image from GCS, generates its embedding with `gemini-embedding-2` (output 768), and runs `$vectorSearch` on Atlas. It aggregates top-K via **similarity-weighted vote** and returns:
 
 ```json
 {
@@ -238,9 +242,9 @@ Clasificador kNN multimodal pensado para ser consumido como **tool** por el agen
 }
 ```
 
-`top_match` puede venir `null` si el ratio `winner_weight / total_weight` no supera el piso mínimo — es preferible decirle al agente "no tengo evidencia" que forzar una clase.
+`top_match` may come back `null` if the `winner_weight / total_weight` ratio doesn't clear the minimum floor — it's better to tell the agent "I have no evidence" than to force a class.
 
-**Arquitectura hexagonal** — tres puertos independientes:
+**Hexagonal architecture** — three independent ports:
 
 ```
 domain/pest/
@@ -248,17 +252,17 @@ domain/pest/
 ├── embedder.py      # Port: PestEmbedder (async embed_image)
 ├── storage.py       # Port: PestStorage (generate_upload_url, read_bytes)
 ├── repository.py    # Port: PestRepository (search_similar)
-├── service.py       # Orquestación: read → embed → search → weighted vote
-└── router.py        # Adapters montados vía Depends
+├── service.py       # Orchestration: read → embed → search → weighted vote
+└── router.py        # Adapters mounted via Depends
 
-providers/gemini/    # embed_content con gemini-embedding-2 (API key)
+providers/gemini/    # embed_content with gemini-embedding-2 (API key)
 providers/gcs/       # signed URL v4 + download_as_bytes
 providers/mongo/pest_repository.py  # Atlas $vectorSearch
 ```
 
-**Infra que hay que crear una sola vez:**
+**One-time infra to set up:**
 
-- **Atlas vector index** (crear vía UI o `mongosh`). Nombre exacto: `pest_vector_index`. Definición:
+- **Atlas vector index** (create via UI or `mongosh`). Exact name: `pest_vector_index`. Definition:
 
   ```json
   {
@@ -277,7 +281,7 @@ providers/mongo/pest_repository.py  # Atlas $vectorSearch
   }
   ```
 
-- **Lifecycle rule del bucket** para auto-borrar `queries/` a 1 día (mínimo granular de GCS):
+- **Bucket lifecycle rule** to auto-delete `queries/` after 1 day (GCS' minimum granularity):
 
   ```bash
   cat > /tmp/lifecycle.json <<'EOF'
@@ -295,49 +299,49 @@ providers/mongo/pest_repository.py  # Atlas $vectorSearch
   gcloud storage buckets update gs://$GCS_BUCKET --lifecycle-file=/tmp/lifecycle.json
   ```
 
-- **Permisos para signed URLs**: la service account del backend necesita `roles/iam.serviceAccountTokenCreator` sobre sí misma para firmar sin private key (requerido en Cloud Run).
+- **Permissions for signed URLs**: the backend service account needs `roles/iam.serviceAccountTokenCreator` on itself to sign without a private key (required on Cloud Run).
 
-**Scripts auxiliares:**
+**Helper scripts:**
 
 ```bash
-# 1) Migrar los image_bytes existentes de Mongo → GCS prefijo reference/
+# 1) Migrate existing Mongo image_bytes → GCS reference/ prefix
 .venv/bin/python -m scripts.migrate_bytes_to_gcs
 
-# 2) Evaluar kNN en leave-one-out antes de exponer el tool
+# 2) Evaluate kNN in leave-one-out before exposing the tool
 .venv/bin/python -m scripts.calibrate_knn --k 5
 ```
 
-`calibrate_knn` reporta accuracy global + por clase + histograma de similitudes (correctas vs incorrectas) + threshold sugerido para `MIN_CONFIDENCE_RATIO` en `domain/pest/service.py`.
+`calibrate_knn` reports global accuracy + per-class accuracy + similarity histogram (correct vs. incorrect) + a suggested threshold for `MIN_CONFIDENCE_RATIO` in `domain/pest/service.py`.
 
 ### Elevation (`/elevation`)
 
-Proxy a [Open-Meteo Elevation](https://open-meteo.com/en/docs/elevation-api) con cache Redis de 365 días (la altitud no cambia). Sin API key.
+Proxy to [Open-Meteo Elevation](https://open-meteo.com/en/docs/elevation-api) with a 365-day Redis cache (altitude doesn't change). No API key.
 
-**`GET /elevation?lat=&lon=`** → `{ lat, lon, elevation_m: float }`. Útil para: idoneidad de cultivo por piso altitudinal, riesgo de heladas, ajuste de ET₀ en recomendaciones de riego.
+**`GET /elevation?lat=&lon=`** → `{ lat, lon, elevation_m: float, interpretation }`. Useful for: crop suitability by altitudinal belt, frost risk, ET₀ adjustment in irrigation recommendations.
 
-Respuestas: `200` con altitud, `404` si no hay dato, `502` si el proveedor falla.
+Responses: `200` with altitude, `404` if no data, `502` on provider failure.
 
 ### Climate history (`/climate/history`)
 
-Proxy a [NASA POWER](https://power.larc.nasa.gov/) (community `AG` — agroclimatología). Datos globales desde 1981. Cache Redis 7 días por `(lat, lon, start, end, granularity)`.
+Proxy to [NASA POWER](https://power.larc.nasa.gov/) (community `AG` — agroclimatology). Global data since 1981. Redis cache 7 days per `(lat, lon, start, end, granularity)`.
 
 **Query params:**
 
-| Param         | Tipo   | Requerido | Descripción                                                    |
-| ------------- | ------ | --------- | -------------------------------------------------------------- |
-| `lat`, `lon`  | float  | sí        | Rango estándar                                                 |
-| `start`, `end`| string | sí        | `YYYY-MM-DD`                                                   |
-| `granularity` | string | no        | `monthly` (default, ergonómico para LLM) o `daily` (máx. 366d) |
+| Param         | Type   | Required | Description                                                       |
+| ------------- | ------ | -------- | ----------------------------------------------------------------- |
+| `lat`, `lon`  | float  | yes      | Standard range                                                    |
+| `start`, `end`| string | yes      | `YYYY-MM-DD`                                                      |
+| `granularity` | string | no       | `monthly` (default, LLM-friendly) or `daily` (max. 366d per call) |
 
-**Variables devueltas** (por punto de la serie): `t2m` (T° media), `t2m_max`, `t2m_min`, `precipitation_mm`, `rh_pct` (humedad relativa), `solar_mj_m2` (radiación solar de onda corta). Valores `null` cuando POWER no tiene dato (sentinela `-999` ya filtrado).
+**Returned variables** (per series point): `t2m` (mean T°), `t2m_max`, `t2m_min`, `precipitation_mm`, `rh_pct` (relative humidity), `solar_mj_m2` (shortwave solar radiation). Values are `null` when POWER has no data (the `-999` sentinel is already filtered).
 
-Pensado para que el agente responda preguntas como *"¿cuánto llovió en mi parcela los últimos 5 años vs. el promedio?"* o *"¿este año es más cálido que lo normal?"*.
+Designed so the agent can answer questions like *"how much did it rain on my plot the last 5 years vs. the average?"* or *"is this year warmer than usual?"*.
 
 ### Disease risk (`/disease-risk`)
 
-**Tool derivado** — sin API externa nueva. Combina el forecast de `/weather` (próximos 7 días, incluye ahora `relative_humidity_2m` horaria) con reglas agronómicas específicas por enfermedad.
+**Derived tool** — no new external API. Combines the `/weather` forecast (next 7 days, including hourly `relative_humidity_2m`) with disease-specific agronomic rules.
 
-**`GET /disease-risk?lat=&lon=&disease=`** — `disease` ∈ `coffee_rust | late_blight | corn_rust`. Respuesta:
+**`GET /disease-risk?lat=&lon=&disease=`** — `disease` ∈ ~50 values (`coffee_rust`, `late_blight`, `corn_rust`, …; full list in `domain/disease_risk/schema.py`). Response:
 
 ```json
 {
@@ -356,26 +360,26 @@ Pensado para que el agente responda preguntas como *"¿cuánto llovió en mi par
 }
 ```
 
-**Reglas de scoring** (0.0-1.0, mapeado a `low <0.3 / moderate <0.5 / high <0.75 / very_high`):
+**Scoring rules** (0.0-1.0, mapped to `low <0.3 / moderate <0.5 / high <0.75 / very_high`). Sample for the most common diseases:
 
-| Enfermedad      | T° óptima (+0.4)  | RH media (+0.3) | Días lluviosos (+0.3) |
+| Disease         | Optimal T° (+0.4) | Mean RH (+0.3)  | Rainy days (+0.3)     |
 | --------------- | ----------------- | --------------- | --------------------- |
 | `coffee_rust`   | 21-25 °C          | ≥ 80%           | ≥ 3                   |
 | `late_blight`   | 10-25 °C          | ≥ 85%           | ≥ 4                   |
 | `corn_rust`     | 20-26 °C          | ≥ 75%           | ≥ 3                   |
 
-**No tiene cache propio** — reusa el del `/weather` (15 min). La composición es a nivel de dominio: `domain/disease_risk/service.py` recibe `WeatherProvider` + `WeatherCache` y llama a `domain.weather.service.fetch_weather`. Para añadir una enfermedad nueva, basta con agregar una entrada a `_DISEASE_RULES` en `domain/disease_risk/service.py` y ampliar el `Literal` de `DiseaseName` en el schema.
+**No own cache** — reuses `/weather`'s (15 min). Composition is at the domain level: `domain/disease_risk/service.py` receives `WeatherProvider` + `WeatherCache` and calls `domain.weather.service.fetch_weather`. To add a new disease, just add an entry to `_DISEASE_RULES` in `domain/disease_risk/service.py` and extend the `Literal` `DiseaseName` in the schema.
 
-## Secretos
+## Secrets
 
-Los nombres listados en `config.py` → `required_secrets` se buscan en GCP Secret Manager como `{MODE}_{NAME}` (p.ej. `PROD_MONGODB_URI`, `PROD_REDIS_URI`). Si la variable ya está en el entorno (vía `.env`), la búsqueda se salta.
+The names listed in `config.py` → `required_secrets` are looked up in GCP Secret Manager as `{MODE}_{NAME}` (e.g. `PROD_MONGODB_URI`, `PROD_REDIS_URI`). If the variable is already in the environment (via `.env`), the lookup is skipped.
 
-Secretos requeridos:
+Required secrets:
 
 - `MONGODB_URI`
 - `REDIS_URI`
-- `GEMINI_API_KEY` — para `gemini-embedding-2` vía Gemini API (ai.google.dev)
-- `GCS_BUCKET` — nombre del bucket para `reference/`, `queries/`, `community/`
+- `GEMINI_API_KEY` — for `gemini-embedding-2` via the Gemini API (ai.google.dev)
+- `GCS_BUCKET` — bucket name for `reference/`, `queries/`, `community/`
 
 ## Docker
 
@@ -384,27 +388,27 @@ docker build -t agrogem .
 docker run --rm -p 8080:8080 --env-file .env agrogem
 ```
 
-## Persistencia
+## Persistence
 
-- **MongoDB** — DB `agrogem`. Colecciones: `users`, `conversations`, `pest_embeddings` (768-dim, 17 plagas).
+- **MongoDB** — DB `agrogem`. Collections: `users`, `conversations`, `pest_embeddings` (768-dim, 17 pests).
 - **Redis** — keys `chat:session:{uuid}` (TTL 24h), `weather:{lat}:{lon}` (15 min), `geocode:{fwd|rev}:...` (30d), `soil:{lat}:{lon}` (90d), `elevation:{lat}:{lon}` (365d), `climate:hist:{granularity}:{lat}:{lon}:{start}:{end}` (7d).
-- **GCS** — bucket `$GCS_BUCKET` con prefijos `reference/` (ground truth permanente), `queries/` (TTL 1d vía lifecycle), `community/` (reservado).
+- **GCS** — bucket `$GCS_BUCKET` with prefixes `reference/` (permanent ground truth), `queries/` (TTL 1d via lifecycle), `community/` (reserved).
 
 ## Data sources & attribution
 
-Este proyecto consume datos abiertos de terceros. Si lo desplegás o redistribuís, respetá las licencias/atribuciones de cada fuente:
+This project consumes third-party open data. If you deploy or redistribute, respect each source's license/attribution:
 
-- **[Open-Meteo](https://open-meteo.com/)** — Weather & Elevation APIs. Uso gratuito (non-commercial / con atribución). Licencia [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
-- **[Nominatim](https://nominatim.org/)** / **OpenStreetMap** — Geocoding. Datos © OpenStreetMap contributors, licencia [ODbL](https://opendatacommons.org/licenses/odbl/). El cliente manda `User-Agent: agrogem/1.0` y respeta el [usage policy](https://operations.osmfoundation.org/policies/nominatim/) (≤1 req/s).
-- **[ISRIC SoilGrids](https://www.isric.org/explore/soilgrids)** — Perfil de suelo. Licencia [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Cita: Poggio et al., *SOIL*, 2021.
-- **[NASA POWER](https://power.larc.nasa.gov/)** — Histórico climático. Dominio público, atribución recomendada.
-- **[GBIF](https://www.gbif.org/)** — Ocurrencias de especies. Datos bajo [CC BY / CC BY-NC / CC0](https://www.gbif.org/terms) según el dataset; citar el GBIF download DOI cuando aplique.
-- **[Google Gemini API](https://ai.google.dev/)** — Embeddings para kNN de plagas. Sujeto a los [términos de Gemini API](https://ai.google.dev/terms).
+- **[Open-Meteo](https://open-meteo.com/)** — Weather & Elevation APIs. Free use (non-commercial / with attribution). License [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).
+- **[Nominatim](https://nominatim.org/)** / **OpenStreetMap** — Geocoding. Data © OpenStreetMap contributors, [ODbL](https://opendatacommons.org/licenses/odbl/) license. The client sends `User-Agent: agrogem/1.0` and respects the [usage policy](https://operations.osmfoundation.org/policies/nominatim/) (≤1 req/s).
+- **[ISRIC SoilGrids](https://www.isric.org/explore/soilgrids)** — Soil profile. License [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). Citation: Poggio et al., *SOIL*, 2021.
+- **[NASA POWER](https://power.larc.nasa.gov/)** — Climate history. Public domain, attribution recommended.
+- **[GBIF](https://www.gbif.org/)** — Species occurrences. Data under [CC BY / CC BY-NC / CC0](https://www.gbif.org/terms) depending on the dataset; cite the GBIF download DOI when applicable.
+- **[Google Gemini API](https://ai.google.dev/)** — Embeddings for the pest kNN. Subject to the [Gemini API terms](https://ai.google.dev/terms).
 
 ## Reporting security issues
 
-Si encontrás una vulnerabilidad, por favor **no** abras un issue público. Reportala por email al mantenedor (ver autor en git history) y esperá confirmación antes de divulgarla.
+If you find a vulnerability, please **do not** open a public issue. Report it by email to the maintainer (see author in git history) and wait for confirmation before disclosing it.
 
 ## License
 
-[MIT](LICENSE) © 2026 Gustavo Gordillo
+[MIT](../LICENSE) © 2026 Gustavo Gordillo
