@@ -79,73 +79,117 @@ Dos floats. Ideales para empezar: una sola llamada, sin enums.
 #### `GET /weather`
 Clima actual + forecast horario y diario 7d (Open-Meteo, cache 15 min).
 
-**Input:** `lat: float` (-90..90), `lon: float` (-180..180)
+**Input**
 
-**Output (resumido):**
-```json
-{
-  "latitude": 14.76, "longitude": -90.99, "timezone": "America/Guatemala",
-  "current": {
-    "time": "2026-04-27T14:00", "temperature_2m": 22.4,
-    "relative_humidity_2m": 68, "precipitation": 0.0,
-    "weather_code": 2, "wind_speed_10m": 11.5
-  },
-  "hourly": { "time": ["..."], "temperature_2m": [...], "relative_humidity_2m": [...], "precipitation_probability": [...] },
-  "daily":  { "time": ["..."], "temperature_2m_max": [...], "temperature_2m_min": [...],
-              "precipitation_sum": [...], "et0_fao_evapotranspiration": [...], "uv_index_max": [...] }
-}
-```
+| Parámetro | Tipo  | Descripción            | Ejemplo |
+| --------- | ----- | ---------------------- | ------- |
+| `lat`     | float | Latitud (-90..90)      | `14.76` |
+| `lon`     | float | Longitud (-180..180)   | `-90.99`|
+
+**Output**
+
+| Campo                                  | Descripción                                            | Ejemplo                  |
+| -------------------------------------- | ------------------------------------------------------ | ------------------------ |
+| `latitude`, `longitude`                | Coordenadas eco                                        | `14.76`, `-90.99`        |
+| `timezone`                             | Zona horaria local                                     | `"America/Guatemala"`    |
+| `current.temperature_2m`               | Temperatura actual a 2 m (°C)                          | `22.4`                   |
+| `current.relative_humidity_2m`         | Humedad relativa actual (%)                            | `68`                     |
+| `current.precipitation`                | Precipitación última hora (mm)                         | `0.0`                    |
+| `current.weather_code`                 | Código WMO de condición                                | `2` (parcialmente nubl.) |
+| `current.wind_speed_10m`               | Viento a 10 m (km/h)                                   | `11.5`                   |
+| `hourly.*` (arrays 7d)                 | `time`, `temperature_2m`, `relative_humidity_2m`, `precipitation_probability` | listas de 168 valores |
+| `daily.temperature_2m_max/min`         | T° max/min diaria (°C)                                 | `[24.1, 23.8, ...]`      |
+| `daily.precipitation_sum`              | Lluvia diaria total (mm)                               | `[0.0, 2.4, ...]`        |
+| `daily.et0_fao_evapotranspiration`     | ET₀ FAO diaria (mm)                                    | `[4.2, 4.5, ...]`        |
+| `daily.uv_index_max`                   | UV máximo diario                                       | `[10.5, 11.0, ...]`      |
 
 #### `GET /soil`
 Perfil ISRIC SoilGrids 0–30 cm (cache 90 días).
 
-**Input:** `lat`, `lon`
+**Input**
 
-**Output:**
-```json
-{
-  "lat": 14.76, "lon": -90.99,
-  "horizons": [
-    { "depth": "0-5cm",   "ph": 6.2, "soc_g_per_kg": 12.4, "nitrogen_g_per_kg": 1.1,
-      "clay_pct": 28, "sand_pct": 35, "silt_pct": 37, "cec_mmol_per_kg": 185, "texture_class": "clay loam" },
-    { "depth": "5-15cm",  "...": "..." },
-    { "depth": "15-30cm", "...": "..." }
-  ],
-  "dominant_texture": "clay loam",
-  "interpretation": "Horizonte superficial (0-5 cm): ligeramente ácido (pH 6.2); materia orgánica moderada (SOC 12.4 g/kg); textura clay loam."
-}
-```
+| Parámetro | Tipo  | Descripción          | Ejemplo |
+| --------- | ----- | -------------------- | ------- |
+| `lat`     | float | Latitud              | `14.76` |
+| `lon`     | float | Longitud             | `-90.99`|
+
+**Output**
+
+| Campo                          | Descripción                                                       | Ejemplo                |
+| ------------------------------ | ----------------------------------------------------------------- | ---------------------- |
+| `horizons[]`                   | 3 horizontes: `0-5cm`, `5-15cm`, `15-30cm` (mismos campos abajo)  | array de 3 objetos     |
+| `horizons[].depth`             | Rango de profundidad                                              | `"0-5cm"`              |
+| `horizons[].ph`                | pH en H₂O                                                         | `6.2`                  |
+| `horizons[].soc_g_per_kg`      | Carbono orgánico (g/kg)                                           | `12.4`                 |
+| `horizons[].nitrogen_g_per_kg` | Nitrógeno total (g/kg)                                            | `1.1`                  |
+| `horizons[].clay_pct` / `sand_pct` / `silt_pct` | Composición textural (%)                         | `28` / `35` / `37`     |
+| `horizons[].cec_mmol_per_kg`   | Capacidad de intercambio catiónico                                | `185`                  |
+| `horizons[].texture_class`     | Clase USDA derivada                                               | `"clay loam"`          |
+| `dominant_texture`             | Textura del horizonte 0-5 cm                                      | `"clay loam"`          |
+| `interpretation`               | Resumen agronómico en español                                     | `"Horizonte superficial (0-5 cm): ligeramente ácido (pH 6.2)..."` |
 
 #### `GET /elevation`
 Altitud m.s.n.m (Open-Meteo, cache 365 días).
 
-**Input:** `lat`, `lon` → **Output:** `{ "lat": 14.76, "lon": -90.99, "elevation_m": 2310.0 }`
+**Input**
+
+| Parámetro | Tipo  | Descripción | Ejemplo |
+| --------- | ----- | ----------- | ------- |
+| `lat`     | float | Latitud     | `14.76` |
+| `lon`     | float | Longitud    | `-90.99`|
+
+**Output**
+
+| Campo         | Descripción            | Ejemplo  |
+| ------------- | ---------------------- | -------- |
+| `lat`, `lon`  | Coordenadas eco        | `14.76`, `-90.99` |
+| `elevation_m` | Altitud sobre el nivel del mar (m) | `2310.0` |
 
 #### `GET /frost-risk`
 Índice 0–1 de helada 7d, ya corregido por elevación.
 
-**Input:** `lat`, `lon`
+**Input**
 
-**Output:**
-```json
-{
-  "lat": 14.76, "lon": -90.99, "elevation_m": 2310.0,
-  "risk_score": 0.62, "risk_level": "high",
-  "factors": {
-    "window_days": 7, "min_temp_c": -1.2, "frost_hours": 3,
-    "freezing_probability_pct": 18.5, "altitude_correction_c": -1.4,
-    "rule_notes": ["3 horas con T° < 0°C", "elevación 2310 m → corrección -1.4°C"]
-  },
-  "interpretation": "Riesgo alto de helada los próximos 7 días. Mínima esperada -1.2°C..."
-}
-```
+| Parámetro | Tipo  | Descripción | Ejemplo |
+| --------- | ----- | ----------- | ------- |
+| `lat`     | float | Latitud     | `14.76` |
+| `lon`     | float | Longitud    | `-90.99`|
+
+**Output**
+
+| Campo                              | Descripción                                       | Ejemplo                                 |
+| ---------------------------------- | ------------------------------------------------- | --------------------------------------- |
+| `elevation_m`                      | Elevación usada para la corrección                | `2310.0`                                |
+| `risk_score`                       | Índice 0.0–1.0                                    | `0.62`                                  |
+| `risk_level`                       | `low` / `moderate` / `high` / `very_high`         | `"high"`                                |
+| `factors.window_days`              | Días evaluados                                    | `7`                                     |
+| `factors.min_temp_c`               | T° mínima forecast                                | `-1.2`                                  |
+| `factors.frost_hours`              | Horas con T° < 0 °C en la ventana                 | `3`                                     |
+| `factors.freezing_probability_pct` | Probabilidad de helada (%)                        | `18.5`                                  |
+| `factors.altitude_correction_c`    | Corrección aplicada por elevación (°C)            | `-1.4`                                  |
+| `factors.rule_notes`               | Lista de factores detectados, en español          | `["3 horas con T° < 0°C", ...]`         |
+| `interpretation`                   | Resumen para Gemma                                | `"Riesgo alto de helada los próximos 7 días..."` |
 
 #### `GET /geocode/reverse`
 `lat,lon` → país / estado / municipio.
 
-**Input:** `lat`, `lon`
+**Input**
 
-**Output:** `{ "lat": 14.76, "lon": -90.99, "display_name": "Tecpán Guatemala, Chimaltenango, Guatemala", "country_code": "gt", "state": "Chimaltenango", "municipality": "Tecpán Guatemala", "type": "administrative" }`
+| Parámetro | Tipo  | Descripción | Ejemplo |
+| --------- | ----- | ----------- | ------- |
+| `lat`     | float | Latitud     | `14.76` |
+| `lon`     | float | Longitud    | `-90.99`|
+
+**Output**
+
+| Campo          | Descripción                          | Ejemplo                                          |
+| -------------- | ------------------------------------ | ------------------------------------------------ |
+| `lat`, `lon`   | Coordenadas eco                      | `14.76`, `-90.99`                                |
+| `display_name` | Etiqueta completa del lugar          | `"Tecpán Guatemala, Chimaltenango, Guatemala"`   |
+| `country_code` | ISO alpha-2 en minúsculas            | `"gt"`                                           |
+| `state`        | Departamento / estado / provincia    | `"Chimaltenango"`                                |
+| `municipality` | Municipio / ciudad                   | `"Tecpán Guatemala"`                             |
+| `type`         | Tipo OSM (administrative, village…)  | `"administrative"`                               |
 
 ---
 
@@ -154,17 +198,23 @@ Altitud m.s.n.m (Open-Meteo, cache 365 días).
 #### `GET /geocode`
 Texto libre → `lat,lon`. **Es la primera llamada** cuando el usuario menciona un lugar por nombre.
 
-**Input:**
-- `q: string` (requerido) — texto libre. Ej: `"Chimaltenango"`, `"Zapopan, Jal."`, `"finca el quetzal, alta verapaz"`.
-- `country: string` (opcional) — filtro ISO alpha-2. Ej: `"GT"`, `"MX"`. Recomendado para reducir ambigüedad.
+**Input**
 
-**Output:** mismo shape que `/geocode/reverse` (devuelve top-1).
+| Parámetro | Tipo   | Requerido | Descripción                            | Ejemplo                          |
+| --------- | ------ | --------- | -------------------------------------- | -------------------------------- |
+| `q`       | string | sí        | Texto libre del lugar                  | `"Chimaltenango"`, `"finca el quetzal, alta verapaz"` |
+| `country` | string | no        | Filtro ISO alpha-2 (reduce ambigüedad) | `"GT"`, `"MX"`                   |
 
-```json
-{ "lat": 14.6611, "lon": -90.8210, "display_name": "Chimaltenango, Guatemala",
-  "country_code": "gt", "state": "Chimaltenango", "municipality": "Chimaltenango",
-  "type": "administrative" }
-```
+**Output** — mismo shape que `/geocode/reverse` (devuelve top-1).
+
+| Campo          | Descripción                         | Ejemplo                                |
+| -------------- | ----------------------------------- | -------------------------------------- |
+| `lat`, `lon`   | Coordenadas resueltas               | `14.6611`, `-90.8210`                  |
+| `display_name` | Etiqueta completa                   | `"Chimaltenango, Guatemala"`           |
+| `country_code` | ISO alpha-2                         | `"gt"`                                 |
+| `state`        | Departamento / estado               | `"Chimaltenango"`                      |
+| `municipality` | Municipio                           | `"Chimaltenango"`                      |
+| `type`         | Tipo OSM                            | `"administrative"`                     |
 
 ---
 
@@ -173,144 +223,164 @@ Texto libre → `lat,lon`. **Es la primera llamada** cuando el usuario menciona 
 #### `GET /pest-risk`
 Riesgo de plaga 7d (grados-día + humedad). Reusa cache de `/weather`.
 
-**Input:**
-- `lat`, `lon`
-- `pest`: enum de **9 valores** — `spider_mite | whitefly | broad_mite | white_grub | thrips | leafminer | fall_armyworm | root_knot_nematode | coffee_berry_borer`
+**Input**
 
-**Output:**
-```json
-{
-  "pest": "fall_armyworm", "pest_type": "insect", "life_stage_risk": "larva",
-  "affected_crops": ["corn", "rice", "sugarcane"],
-  "lat": 14.66, "lon": -90.82,
-  "risk_score": 0.74, "risk_level": "high",
-  "factors": {
-    "window_days": 7, "avg_temp_c": 24.8, "avg_humidity_pct": 72, "rainy_days": 2,
-    "rule_notes": ["T° media 24.8°C óptima para desarrollo larval", "2 días lluviosos"]
-  },
-  "virus_coalert": null,
-  "interpretation": "Riesgo alto de gusano cogollero (Spodoptera frugiperda)..."
-}
-```
+| Parámetro | Tipo   | Descripción                                     | Ejemplo            |
+| --------- | ------ | ----------------------------------------------- | ------------------ |
+| `lat`     | float  | Latitud                                         | `14.66`            |
+| `lon`     | float  | Longitud                                        | `-90.82`           |
+| `pest`    | enum   | `spider_mite \| whitefly \| broad_mite \| white_grub \| thrips \| leafminer \| fall_armyworm \| root_knot_nematode \| coffee_berry_borer` | `"fall_armyworm"`  |
+
+**Output**
+
+| Campo                       | Descripción                                       | Ejemplo                                                 |
+| --------------------------- | ------------------------------------------------- | ------------------------------------------------------- |
+| `pest`                      | Plaga consultada                                  | `"fall_armyworm"`                                       |
+| `pest_type`                 | `mite` / `insect` / `nematode`                    | `"insect"`                                              |
+| `life_stage_risk`           | `larva` / `adult` / `both`                        | `"larva"`                                               |
+| `affected_crops`            | Cultivos sensibles                                | `["corn", "rice", "sugarcane"]`                         |
+| `risk_score`                | Índice 0.0–1.0                                    | `0.74`                                                  |
+| `risk_level`                | `low` / `moderate` / `high` / `very_high`         | `"high"`                                                |
+| `factors.avg_temp_c`        | T° media de la ventana                            | `24.8`                                                  |
+| `factors.avg_humidity_pct`  | Humedad relativa media                            | `72`                                                    |
+| `factors.rainy_days`        | Días con precipitación ≥ 1 mm                     | `2`                                                     |
+| `factors.rule_notes`        | Factores detectados                               | `["T° media 24.8°C óptima para desarrollo larval"]`     |
+| `virus_coalert`             | Alerta de virus asociado (puede ser `null`)       | `null`                                                  |
+| `interpretation`            | Resumen para Gemma                                | `"Riesgo alto de gusano cogollero..."`                  |
 
 #### `GET /irrigation-risk`
 Estrés hídrico 7d. Combina ET₀ Hargreaves con coeficientes Kc por cultivo y forecast de lluvia.
 
-**Input:**
-- `lat`, `lon`
-- `crop`: `corn | rice | bean | wheat | coffee | sugarcane | banana | tomato | potato | onion | broccoli | rose`
+**Input**
 
-**Output:**
-```json
-{
-  "crop": "potato", "lat": 14.76, "lon": -90.99,
-  "risk_score": 0.58, "risk_level": "moderate",
-  "factors": {
-    "window_days": 7, "et0_sum_mm": 32.4, "precipitation_sum_mm": 8.2,
-    "crop_water_requirement_mm": 35.6, "soil_water_deficit_mm": 27.4,
-    "rule_notes": ["Déficit hídrico 27.4 mm en 7 días"]
-  },
-  "irrigation_recommendation_mm": 27.4,
-  "interpretation": "Riesgo moderado de estrés hídrico para papa. Aplicar ~27 mm de riego en los próximos 7 días."
-}
-```
+| Parámetro | Tipo   | Descripción                              | Ejemplo     |
+| --------- | ------ | ---------------------------------------- | ----------- |
+| `lat`     | float  | Latitud                                  | `14.76`     |
+| `lon`     | float  | Longitud                                 | `-90.99`    |
+| `crop`    | enum   | `corn \| rice \| bean \| wheat \| coffee \| sugarcane \| banana \| tomato \| potato \| onion \| broccoli \| rose` | `"potato"`  |
+
+**Output**
+
+| Campo                                | Descripción                                     | Ejemplo                                  |
+| ------------------------------------ | ----------------------------------------------- | ---------------------------------------- |
+| `risk_score`                         | Índice 0.0–1.0                                  | `0.58`                                   |
+| `risk_level`                         | `low` / `moderate` / `high` / `very_high`       | `"moderate"`                             |
+| `factors.et0_sum_mm`                 | Evapotranspiración total en la ventana (mm)     | `32.4`                                   |
+| `factors.precipitation_sum_mm`       | Lluvia forecast total (mm)                      | `8.2`                                    |
+| `factors.crop_water_requirement_mm`  | Demanda hídrica del cultivo (mm)                | `35.6`                                   |
+| `factors.soil_water_deficit_mm`      | Déficit en el suelo (mm)                        | `27.4`                                   |
+| `factors.rule_notes`                 | Factores detectados                             | `["Déficit hídrico 27.4 mm en 7 días"]`  |
+| `irrigation_recommendation_mm`       | **Mm de agua a aplicar** (campo accionable)     | `27.4`                                   |
+| `interpretation`                     | Resumen para Gemma                              | `"Aplicar ~27 mm de riego..."`           |
 
 #### `GET /harvest-window`
 Ventana óptima de cosecha (T°, RH, lluvia, días secos).
 
-**Input:**
-- `lat`, `lon`
-- `crop`: `corn | rice | bean | wheat | coffee | sugarcane | banana | tomato | potato | onion | broccoli | rose | strawberry`
+**Input**
 
-**Output:**
-```json
-{
-  "crop": "coffee", "lat": 14.76, "lon": -90.99,
-  "window_score": 0.81, "window_level": "high",
-  "factors": {
-    "window_days": 7, "avg_temp_c": 21.5, "avg_humidity_pct": 65,
-    "rainy_days": 1, "dry_spells": 4,
-    "rule_notes": ["4 días secos consecutivos óptimos para secado en patio"]
-  },
-  "optimal_dates": ["2026-04-29", "2026-04-30", "2026-05-01"],
-  "warning": null,
-  "interpretation": "Ventana óptima para cosechar café entre el 29 abr y el 1 may..."
-}
-```
+| Parámetro | Tipo   | Descripción                              | Ejemplo     |
+| --------- | ------ | ---------------------------------------- | ----------- |
+| `lat`     | float  | Latitud                                  | `14.76`     |
+| `lon`     | float  | Longitud                                 | `-90.99`    |
+| `crop`    | enum   | `corn \| rice \| bean \| wheat \| coffee \| sugarcane \| banana \| tomato \| potato \| onion \| broccoli \| rose \| strawberry` | `"coffee"`  |
+
+**Output**
+
+| Campo                       | Descripción                                       | Ejemplo                                                |
+| --------------------------- | ------------------------------------------------- | ------------------------------------------------------ |
+| `window_score`              | Índice 0.0–1.0 (1 = óptimo)                       | `0.81`                                                 |
+| `window_level`              | `low` / `moderate` / `high` / `very_high`         | `"high"`                                               |
+| `factors.avg_temp_c`        | T° media de la ventana                            | `21.5`                                                 |
+| `factors.avg_humidity_pct`  | Humedad relativa media                            | `65`                                                   |
+| `factors.rainy_days`        | Días lluviosos                                    | `1`                                                    |
+| `factors.dry_spells`        | Días secos consecutivos                           | `4`                                                    |
+| `factors.rule_notes`        | Factores detectados                               | `["4 días secos consecutivos óptimos para secado"]`    |
+| `optimal_dates`             | Fechas sugeridas para cosechar                    | `["2026-04-29", "2026-04-30", "2026-05-01"]`           |
+| `warning`                   | Aviso si las condiciones no son ideales           | `null`                                                 |
+| `interpretation`            | Resumen para Gemma                                | `"Ventana óptima para cosechar café..."`               |
 
 ---
 
 ### 🟠 Tier 4 — Más parámetros / enum extenso
 
 #### `GET /disease-risk`
-Cubre **~50 enfermedades** entre cultivos de granos, hortalizas, frutales, ornamentales y cacao/café/banano. Mismo formato de respuesta que `pest-risk`.
+Cubre **~50 enfermedades** entre cultivos de granos, hortalizas, frutales, ornamentales y cacao/café/banano.
 
-**Input:**
-- `lat`, `lon`
-- `disease`: enum largo — `coffee_rust | late_blight | corn_rust | wheat_leaf_rust | rice_blast | tomato_late_blight | potato_late_blight | banana_black_sigatoka | cacao_monilia | rose_botrytis | ...` (lista completa en `domain/disease_risk/schema.py`).
+**Input**
 
-> 💡 Tip: para function calling con Gemma, conviene **inyectar dinámicamente** solo las enfermedades relevantes al cultivo del usuario en el `enum` de la tool (en vez de las 50). Eso mantiene el prompt corto y la latencia baja.
+| Parámetro | Tipo   | Descripción                                                      | Ejemplo         |
+| --------- | ------ | ---------------------------------------------------------------- | --------------- |
+| `lat`     | float  | Latitud                                                          | `14.56`         |
+| `lon`     | float  | Longitud                                                         | `-90.73`        |
+| `disease` | enum   | ~50 valores (`coffee_rust`, `late_blight`, `corn_rust`, `wheat_leaf_rust`, `rice_blast`, `tomato_late_blight`, `potato_late_blight`, `banana_black_sigatoka`, `cacao_monilia`, `rose_botrytis`, …). Lista completa en `domain/disease_risk/schema.py`. | `"coffee_rust"` |
 
-**Output (ejemplo `coffee_rust`):**
-```json
-{
-  "disease": "coffee_rust", "lat": 14.56, "lon": -90.73,
-  "risk_score": 0.72, "risk_level": "high",
-  "factors": {
-    "window_days": 7, "avg_temp_c": 22.4, "avg_humidity_pct": 84, "rainy_days": 4,
-    "rule_notes": [
-      "T° media 22.4°C en rango óptimo [21-25°C]",
-      "humedad relativa 84% ≥ 80%",
-      "4 días lluviosos (umbral 3)"
-    ]
-  },
-  "interpretation": "Riesgo alto de roya del café (Hemileia vastatrix) en los próximos 7 días..."
-}
-```
+> 💡 Tip: para function calling, conviene **inyectar dinámicamente** solo las enfermedades del cultivo del usuario en el `enum` de la tool. Mantiene el prompt corto y enfocado.
+
+**Output**
+
+| Campo                       | Descripción                                       | Ejemplo                                       |
+| --------------------------- | ------------------------------------------------- | --------------------------------------------- |
+| `disease`                   | Enfermedad consultada                             | `"coffee_rust"`                               |
+| `risk_score`                | Índice 0.0–1.0                                    | `0.72`                                        |
+| `risk_level`                | `low` / `moderate` / `high` / `very_high`         | `"high"`                                      |
+| `factors.avg_temp_c`        | T° media de la ventana                            | `22.4`                                        |
+| `factors.avg_humidity_pct`  | Humedad relativa media                            | `84`                                          |
+| `factors.rainy_days`        | Días lluviosos                                    | `4`                                           |
+| `factors.rule_notes`        | Factores detectados                               | `["T° media 22.4°C en rango óptimo [21-25°C]", "RH 84% ≥ 80%", "4 días lluviosos"]` |
+| `interpretation`            | Resumen para Gemma                                | `"Riesgo alto de roya del café (Hemileia vastatrix)..."` |
 
 #### `GET /climate/history`
 Histórico desde 1981 (NASA POWER comunidad AG). Para preguntas tipo *"¿llovió más este año que el promedio?"*.
 
-**Input:**
-- `lat`, `lon`
-- `start: string` (`YYYY-MM-DD`)
-- `end: string` (`YYYY-MM-DD`)
-- `granularity: string` (opcional, default `monthly`) — `monthly` (recomendado para rangos largos) o `daily` (máx. 366 días por request).
+**Input**
 
-**Output:**
-```json
-{
-  "lat": 14.66, "lon": -90.82, "granularity": "monthly",
-  "start": "2024-01-01", "end": "2024-12-31",
-  "series": [
-    { "date": "2024-01", "t2m": 16.2, "t2m_max": 22.1, "t2m_min": 9.8,
-      "precipitation_mm": 4.1, "rh_pct": 71, "solar_mj_m2": 540.2 },
-    { "date": "2024-02", "...": "..." }
-  ]
-}
-```
+| Parámetro     | Tipo   | Requerido | Descripción                                   | Ejemplo        |
+| ------------- | ------ | --------- | --------------------------------------------- | -------------- |
+| `lat`         | float  | sí        | Latitud                                       | `14.66`        |
+| `lon`         | float  | sí        | Longitud                                      | `-90.82`       |
+| `start`       | string | sí        | Fecha inicial `YYYY-MM-DD`                    | `"2024-01-01"` |
+| `end`         | string | sí        | Fecha final `YYYY-MM-DD` (debe ser ≥ `start`) | `"2024-12-31"` |
+| `granularity` | enum   | no        | `monthly` (default) o `daily` (máx. 366 días) | `"monthly"`    |
+
+**Output**
+
+| Campo                     | Descripción                                                | Ejemplo                                  |
+| ------------------------- | ---------------------------------------------------------- | ---------------------------------------- |
+| `granularity`             | Granularidad eco                                           | `"monthly"`                              |
+| `start`, `end`            | Rango eco                                                  | `"2024-01-01"`, `"2024-12-31"`           |
+| `series[]`                | Serie temporal (mismos campos abajo)                       | array                                    |
+| `series[].date`           | `YYYY-MM-DD` (daily) o `YYYY-MM` (monthly)                 | `"2024-01"`                              |
+| `series[].t2m`            | T° media (°C)                                              | `16.2`                                   |
+| `series[].t2m_max/min`    | T° max / min (°C)                                          | `22.1` / `9.8`                           |
+| `series[].precipitation_mm` | Precipitación (mm)                                       | `4.1`                                    |
+| `series[].rh_pct`         | Humedad relativa (%)                                       | `71`                                     |
+| `series[].solar_mj_m2`    | Radiación solar (MJ/m²/día o /mes)                         | `540.2`                                  |
 
 #### `GET /gbif/species`
-Ocurrencias documentadas de una especie en un país (GBIF). Útil para responder *"¿se ha visto el gusano cogollero en Guatemala?"*.
+Ocurrencias documentadas de una especie en un país (GBIF). Útil para *"¿se ha visto el gusano cogollero en Guatemala?"*.
 
-**Input:**
-- `scientific_name: string` (binomial, ≥2 chars). Ej: `"Spodoptera frugiperda"`.
-- `country: string` (ISO alpha-2). Ej: `"GT"`.
-- `limit: int` (1..300).
+**Input**
 
-**Output:**
-```json
-{
-  "found": true, "scientific_name": "Spodoptera frugiperda",
-  "kingdom": "Animalia", "family": "Noctuidae",
-  "common_names": [{ "name": "fall armyworm", "lang": "eng" },
-                   { "name": "gusano cogollero", "lang": "spa" }],
-  "country": "GT", "total_records_in_country": 412, "records_in_sample": 300,
-  "top_regions": [["Petén", 84], ["Escuintla", 61], ["Izabal", 47]],
-  "recent_years": { "2023": 58, "2024": 71, "2025": 33 },
-  "interpretation": "Especie documentada en Guatemala con 412 registros..."
-}
-```
+| Parámetro         | Tipo   | Requerido | Descripción                                   | Ejemplo                    |
+| ----------------- | ------ | --------- | --------------------------------------------- | -------------------------- |
+| `scientific_name` | string | sí        | Nombre científico binomial (≥ 2 caracteres)   | `"Spodoptera frugiperda"`  |
+| `country`         | string | sí        | ISO alpha-2                                   | `"GT"`                     |
+| `limit`           | int    | no        | Tamaño de muestra (1..300, default 300)       | `300`                      |
+
+**Output**
+
+| Campo                         | Descripción                                       | Ejemplo                                                |
+| ----------------------------- | ------------------------------------------------- | ------------------------------------------------------ |
+| `found`                       | Si la especie fue encontrada en GBIF              | `true`                                                 |
+| `scientific_name`             | Nombre canónico                                   | `"Spodoptera frugiperda"`                              |
+| `kingdom`, `family`           | Taxonomía                                         | `"Animalia"`, `"Noctuidae"`                            |
+| `common_names`                | Nombres comunes con idioma                        | `[{"name":"gusano cogollero","lang":"spa"}]`           |
+| `country`                     | País consultado                                   | `"GT"`                                                 |
+| `total_records_in_country`    | Total de ocurrencias                              | `412`                                                  |
+| `records_in_sample`           | Cuántas se trajeron en esta llamada               | `300`                                                  |
+| `top_regions`                 | Regiones con más reportes                         | `[["Petén", 84], ["Escuintla", 61]]`                   |
+| `recent_years`                | Reportes por año reciente                         | `{"2023": 58, "2024": 71, "2025": 33}`                 |
+| `interpretation`              | Resumen para Gemma                                | `"Especie documentada en Guatemala con 412 registros..."` |
 
 ---
 
