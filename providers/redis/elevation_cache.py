@@ -5,7 +5,7 @@ from redis.asyncio import Redis
 from domain.elevation.schema import ElevationResponse
 
 
-ELEVATION_TTL_SECONDS = 365 * 24 * 60 * 60
+ELEVATION_TTL_SECONDS = 60 * 60  # 1 hour
 ELEVATION_KEY_PREFIX = "elevation:"
 
 

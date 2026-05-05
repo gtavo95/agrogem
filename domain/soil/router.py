@@ -40,6 +40,6 @@ async def get_soil(
     if result is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="No soil data found for coordinates.",
+            detail="No hay datos de suelo disponibles para estas coordenadas ni en sus alrededores (posible área urbana, cuerpo de agua o zona sin cobertura).",
         )
     return result

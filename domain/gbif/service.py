@@ -8,7 +8,7 @@ from domain.gbif.schema import CommonName, GbifQuery, SpeciesOccurrenceResponse
 
 
 GBIF_BASE_URL = "https://api.gbif.org/v1"
-CACHE_TTL_SECONDS = 24 * 60 * 60
+CACHE_TTL_SECONDS = 60 * 60  # 1 hour
 REQUEST_TIMEOUT_SECONDS = 15.0
 
 

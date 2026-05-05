@@ -5,7 +5,7 @@ from redis.asyncio import Redis
 from domain.climate.schema import ClimateHistoryResponse, Granularity
 
 
-CLIMATE_TTL_SECONDS = 7 * 24 * 60 * 60
+CLIMATE_TTL_SECONDS = 60 * 60  # 1 hour
 CLIMATE_KEY_PREFIX = "climate:hist:"
 
 

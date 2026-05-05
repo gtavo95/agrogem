@@ -6,7 +6,7 @@ from domain.session.schema import Session
 
 
 SESSION_KEY_PREFIX = "chat:session:"
-SESSION_TTL_SECONDS = 60 * 60 * 24
+SESSION_TTL_SECONDS = 60 * 60  # 1 hour
 
 
 def _session_key(session_id: str) -> str:

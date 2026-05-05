@@ -38,3 +38,7 @@ class SoilResponse(BaseModel):
     interpretation: str = Field(
         description="Resumen agronómico en lenguaje natural."
     )
+    note: str | None = Field(
+        default=None,
+        description="Nota opcional. Se incluye cuando los datos provienen de un punto cercano en lugar de las coordenadas exactas.",
+    )

@@ -5,7 +5,7 @@ from redis.asyncio import Redis
 from domain.soil.schema import SoilResponse
 
 
-SOIL_TTL_SECONDS = 90 * 24 * 60 * 60
+SOIL_TTL_SECONDS = 60 * 60  # 1 hour
 SOIL_KEY_PREFIX = "soil:"
 
 

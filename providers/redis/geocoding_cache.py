@@ -5,7 +5,7 @@ from redis.asyncio import Redis
 from domain.geocoding.schema import GeocodeResult, ReverseGeocodeResult
 
 
-GEOCODE_TTL_SECONDS = 30 * 24 * 60 * 60
+GEOCODE_TTL_SECONDS = 60 * 60  # 1 hour
 FORWARD_KEY_PREFIX = "geocode:fwd:"
 REVERSE_KEY_PREFIX = "geocode:rev:"
 
